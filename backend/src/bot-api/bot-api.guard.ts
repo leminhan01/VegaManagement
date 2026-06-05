@@ -20,8 +20,8 @@ export class BotApiGuard implements CanActivate {
     const expectedKey = this.configService.get<string>('BOT_API_KEY');
 
     if (!apiKey || apiKey !== expectedKey) {
-      this.logger.warn(`Failed API key authentication attempt from ${request.ip}`);
-      throw new UnauthorizedException('Invalid or missing API key');
+      this.logger.warn(`Xác thực API key thất bại từ ${request.ip}`);
+      throw new UnauthorizedException('API key không hợp lệ hoặc bị thiếu');
     }
 
     return true;

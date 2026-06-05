@@ -39,11 +39,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       // Log unexpected errors with full stack trace
       if (exception instanceof Error) {
         this.logger.error(
-          `Unhandled exception: ${exception.message}`,
+          `Ngoại lệ chưa xử lý: ${exception.message}`,
           exception.stack,
         );
       } else {
-        this.logger.error('Unhandled unknown exception', String(exception));
+        this.logger.error('Ngoại lệ không xác định chưa xử lý', String(exception));
       }
     }
 

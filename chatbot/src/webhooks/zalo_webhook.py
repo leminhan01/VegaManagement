@@ -15,14 +15,14 @@ router = APIRouter(prefix="/webhooks/zalo", tags=["Zalo Webhook"])
 agent = ChatbotAgent()
 
 WELCOME_MESSAGE = (
-    "🌿 Chào mừng bạn đến với VegiFlow — Cửa hàng thực phẩm chay online!\n\n"
+    "🌿 Chào mừng bạn đến với VegiFlow - Cửa hàng thực phẩm chay online!\n\n"
     "Em có thể giúp gì cho bạn ạ?\n"
     "• Tư vấn sản phẩm\n"
     "• Tra cứu đơn hàng\n"
     "• Xem danh mục sản phẩm"
 )
 
-IMAGE_REPLY = "Cảm ơn bạn đã gửi hình ảnh! Hiện tại em chưa hỗ trợ xử lý ảnh, bạn có thể mô tả bằng văn bản nhé! 📝"
+IMAGE_REPLY = "Cảm ơn bạn đã gửi hình ảnh! Hiện tại em chưa hỗ trợ xử lý ảnh, bạn có thể mô tả bằng văn bản nhé!"
 
 
 @router.get("")
@@ -33,7 +33,7 @@ async def verify_zalo_webhook(
     """Verify Zalo webhook (challenge response)."""
     if verify_token == settings.ZALO_WEBHOOK_VERIFY_TOKEN:
         return {"challenge": challenge}
-    return {"error": "Invalid verify token"}
+    return {"error": "Mã xác minh không hợp lệ"}
 
 
 @router.post("")
@@ -44,7 +44,7 @@ async def handle_zalo_webhook(request: Request):
         event_name = body.get("event_name", "")
         logger.info(f"Zalo webhook event: {event_name}")
 
-        # User sends text message
+        # Người dùng gửi tin nhắn văn bản
         if event_name == "user_send_text":
             message_data = body.get("message", {})
             sender = message_data.get("sender", {})
@@ -56,18 +56,18 @@ async def handle_zalo_webhook(request: Request):
 
             logger.info(f"Zalo message from {user_id}: {message_text[:100]}")
 
-            # Process with AI agent
+            # Xử lý bằng AI agent
             response = await agent.process_message(
                 platform="ZALO",
                 platform_user_id=user_id,
                 user_message=message_text,
             )
 
-            # Send response back via Zalo
+            # Gửi phản hồi qua Zalo
             await zalo_client.send_text(user_id, response)
             return {"status": "ok"}
 
-        # User sends image
+        # Người dùng gửi hình ảnh
         elif event_name == "user_send_image":
             message_data = body.get("message", {})
             sender = message_data.get("sender", {})
@@ -77,7 +77,7 @@ async def handle_zalo_webhook(request: Request):
                 await zalo_client.send_text(user_id, IMAGE_REPLY)
             return {"status": "ok"}
 
-        # User follows the OA
+        # Người dùng theo dõi OA
         elif event_name == "follow":
             message_data = body.get("message", {})
             sender = message_data.get("sender", {})
@@ -87,11 +87,11 @@ async def handle_zalo_webhook(request: Request):
                 await zalo_client.send_text(user_id, WELCOME_MESSAGE)
             return {"status": "ok"}
 
-        # Sticker or other events
+        # Sticker hoặc sự kiện khác
         else:
-            logger.info(f"Unhandled Zalo event: {event_name}")
+            logger.info(f"Sự kiện Zalo chưa xử lý: {event_name}")
             return {"status": "ok"}
 
     except Exception as e:
-        logger.error(f"Zalo webhook error: {e}", exc_info=True)
+        logger.error(f"Lỗi webhook Zalo: {e}", exc_info=True)
         return {"status": "error", "message": str(e)}

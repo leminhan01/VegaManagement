@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsInt,
   IsNumber,
+  IsIn,
   Min,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
@@ -54,4 +55,12 @@ export class FilterProductsDto {
   })
   @IsString({ each: true })
   tags?: string[];
+
+  @IsOptional()
+  @IsIn(['createdAt', 'updatedAt', 'name', 'price', 'stock', 'sku'])
+  sort?: 'createdAt' | 'updatedAt' | 'name' | 'price' | 'stock' | 'sku';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  order?: 'asc' | 'desc';
 }

@@ -37,7 +37,7 @@ class ChatbotAgent:
 
         Args:
             platform: "ZALO" or "MESSENGER"
-            platform_user_id: User ID on the platform
+            platform_user_id: ID người dùng trên nền tảng
             user_message: The text message from the user
             customer_id: Optional linked customer ID
             guest_phone: Optional phone number

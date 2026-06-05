@@ -51,7 +51,7 @@ class SessionManager:
                 "metadata": metadata,
             })
         except Exception as e:
-            logger.error(f"Failed to save message: {e}")
+            logger.error(f"Không lưu được tin nhắn: {e}")
 
     async def get_history(self, session_id: str) -> list[dict[str, Any]]:
         """Get chat history for context building."""

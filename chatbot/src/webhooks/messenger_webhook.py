@@ -84,5 +84,5 @@ async def handle_messenger_webhook(request: Request):
         return {"status": "ok"}
 
     except Exception as e:
-        logger.error(f"Messenger webhook error: {e}", exc_info=True)
+        logger.error(f"Lỗi webhook Messenger: {e}", exc_info=True)
         return {"status": "error", "message": str(e)}

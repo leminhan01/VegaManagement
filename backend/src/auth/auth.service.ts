@@ -55,7 +55,7 @@ export class AuthService {
     const user = await this.validateUser(loginDto.username, loginDto.password);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không hợp lệ');
     }
 
     const payload: JwtPayload = {
@@ -67,7 +67,7 @@ export class AuthService {
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken(payload);
 
-    this.logger.log(`Admin "${user.username}" logged in successfully`);
+    this.logger.log(`Admin "${user.username}" đăng nhập thành công`);
 
     return {
       accessToken,
@@ -98,7 +98,7 @@ export class AuthService {
 
       return { accessToken };
     } catch {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn');
     }
   }
 

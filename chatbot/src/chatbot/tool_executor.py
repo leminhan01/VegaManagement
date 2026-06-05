@@ -58,10 +58,10 @@ async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
             return _format_result(result)
 
         else:
-            return json.dumps({"error": f"Unknown tool: {name}"})
+            return json.dumps({"error": f"Công cụ không xác định: {name}"})
 
     except Exception as e:
-        logger.error(f"Tool execution error [{name}]: {e}")
+        logger.error(f"Lỗi thực thi công cụ [{name}]: {e}")
         return json.dumps({
             "error": "Không thể kết nối đến hệ thống. Vui lòng thử lại sau.",
             "details": str(e),

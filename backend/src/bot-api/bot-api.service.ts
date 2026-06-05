@@ -62,7 +62,7 @@ export class BotApiService {
     });
 
     if (!product) {
-      throw new NotFoundException(`Product with id "${id}" not found`);
+      throw new NotFoundException(`Không tìm thấy sản phẩm với ID "${id}"`);
     }
 
     return product;
@@ -75,7 +75,7 @@ export class BotApiService {
     });
 
     if (!product) {
-      throw new NotFoundException(`Product with id "${id}" not found`);
+      throw new NotFoundException(`Không tìm thấy sản phẩm với ID "${id}"`);
     }
 
     return {
@@ -151,7 +151,7 @@ export class BotApiService {
     });
 
     if (!order) {
-      throw new NotFoundException(`Order with code "${code}" not found`);
+      throw new NotFoundException(`Không tìm thấy đơn hàng với mã "${code}"`);
     }
 
     return order;
@@ -165,7 +165,7 @@ export class BotApiService {
     });
 
     if (!customer) {
-      throw new NotFoundException(`Customer with phone "${phone}" not found`);
+      throw new NotFoundException(`Không tìm thấy khách hàng với số điện thoại "${phone}"`);
     }
 
     const orders = await this.prisma.order.findMany({
@@ -218,7 +218,7 @@ export class BotApiService {
     });
 
     if (!session) {
-      throw new NotFoundException(`Chat session with id "${sessionId}" not found`);
+      throw new NotFoundException(`Không tìm thấy phiên chat với ID "${sessionId}"`);
     }
 
     return this.prisma.chatMessage.create({

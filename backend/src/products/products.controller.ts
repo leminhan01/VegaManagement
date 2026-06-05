@@ -61,23 +61,23 @@ export class ProductsController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@UploadedFile() file?: UploadedProductImage) {
     if (!file) {
-      throw new BadRequestException('Vui long chon anh san pham');
+      throw new BadRequestException('Vui lòng chọn ảnh sản phẩm');
     }
 
     if (!file.mimetype.startsWith('image/')) {
-      throw new BadRequestException('File tai len phai la hinh anh');
+      throw new BadRequestException('File tải lên phải là hình ảnh');
     }
 
     const cloudinaryUrl = process.env.CLOUDINARY_URL;
     if (!cloudinaryUrl) {
-      throw new BadRequestException('Chua cau hinh CLOUDINARY_URL');
+      throw new BadRequestException('Chưa cấu hình CLOUDINARY_URL');
     }
 
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(cloudinaryUrl);
     } catch {
-      throw new BadRequestException('CLOUDINARY_URL khong hop le');
+      throw new BadRequestException('CLOUDINARY_URL không hợp lệ');
     }
 
     const cloudName = parsedUrl.hostname;
@@ -92,8 +92,7 @@ export class ProductsController {
     const formData = new FormData();
     formData.append(
       'file',
-      new Blob([file.buffer], { type: file.mimetype }),
-      file.originalname,
+      `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,
     );
     formData.append('api_key', apiKey);
     formData.append('timestamp', String(timestamp));
@@ -111,7 +110,7 @@ export class ProductsController {
 
     if (!res.ok || !data.secure_url) {
       throw new BadRequestException(
-        data.error?.message || 'Khong upload duoc anh len Cloudinary',
+        data.error?.message || 'Không tải được ảnh lên Cloudinary',
       );
     }
 
