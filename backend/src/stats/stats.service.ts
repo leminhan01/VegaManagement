@@ -157,4 +157,182 @@ export class StatsService {
       })),
     };
   }
+
+  async getInventoryValueReport() {
+    const products = await this.prisma.product.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        stock: true,
+        price: true,
+        category: { select: { id: true, name: true } },
+      },
+      orderBy: { stock: 'desc' },
+    });
+
+    const byCategory = new Map<
+      string,
+      { categoryId: string | null; categoryName: string; stock: number; value: number }
+    >();
+
+    for (const product of products) {
+      const key = product.category?.id ?? 'uncategorized';
+      const current = byCategory.get(key) ?? {
+        categoryId: product.category?.id ?? null,
+        categoryName: product.category?.name ?? 'Chưa phân loại',
+        stock: 0,
+        value: 0,
+      };
+      current.stock += product.stock;
+      current.value += product.stock * product.price;
+      byCategory.set(key, current);
+    }
+
+    return {
+      totalValue: products.reduce((sum, item) => sum + item.stock * item.price, 0),
+      totalStock: products.reduce((sum, item) => sum + item.stock, 0),
+      byCategory: Array.from(byCategory.values()).sort((a, b) => b.value - a.value),
+      topProducts: products
+        .map((product) => ({
+          id: product.id,
+          name: product.name,
+          sku: product.sku,
+          stock: product.stock,
+          value: product.stock * product.price,
+          category: product.category?.name ?? null,
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10),
+    };
+  }
+
+  async getExpirationReport(daysThreshold = 30) {
+    const now = new Date();
+    const threshold = new Date(now);
+    threshold.setDate(now.getDate() + daysThreshold);
+
+    const batches = await this.prisma.productBatch.findMany({
+      where: {
+        remainingQty: { gt: 0 },
+        expirationDate: { not: null },
+      },
+      include: {
+        product: { select: { id: true, name: true, sku: true, unit: true } },
+        warehouse: { select: { id: true, name: true, code: true } },
+      },
+      orderBy: { expirationDate: 'asc' },
+    });
+
+    const expired = batches.filter(
+      (batch) => batch.expirationDate && batch.expirationDate < now,
+    );
+    const expiringSoon = batches.filter(
+      (batch) =>
+        batch.expirationDate &&
+        batch.expirationDate >= now &&
+        batch.expirationDate <= threshold,
+    );
+
+    return {
+      daysThreshold,
+      expiredCount: expired.length,
+      expiringSoonCount: expiringSoon.length,
+      expiredQuantity: expired.reduce((sum, batch) => sum + batch.remainingQty, 0),
+      expiringSoonQuantity: expiringSoon.reduce(
+        (sum, batch) => sum + batch.remainingQty,
+        0,
+      ),
+      batches: [...expired, ...expiringSoon].map((batch) => ({
+        ...batch,
+        daysUntilExpiration: batch.expirationDate
+          ? Math.ceil((batch.expirationDate.getTime() - now.getTime()) / 86400000)
+          : null,
+      })),
+    };
+  }
+
+  async getStockMovementReport(days = 30) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const movements = await this.prisma.stockMovement.findMany({
+      where: { createdAt: { gte: since } },
+      include: {
+        product: { select: { id: true, name: true, sku: true } },
+        batch: { select: { id: true, batchCode: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const byType = movements.reduce<Record<string, number>>((acc, movement) => {
+      acc[movement.type] = (acc[movement.type] ?? 0) + movement.quantity;
+      return acc;
+    }, {});
+
+    const byDay = new Map<string, { day: string; in: number; out: number; adjustment: number }>();
+    for (const movement of movements) {
+      const day = movement.createdAt.toISOString().slice(0, 10);
+      const current = byDay.get(day) ?? { day, in: 0, out: 0, adjustment: 0 };
+      if (movement.type === 'IN') current.in += movement.quantity;
+      if (movement.type === 'OUT') current.out += movement.quantity;
+      if (movement.type === 'ADJUSTMENT') current.adjustment += movement.quantity;
+      byDay.set(day, current);
+    }
+
+    return {
+      days,
+      totalMovements: movements.length,
+      byType,
+      byDay: Array.from(byDay.values()),
+      recentMovements: movements.slice(-20).reverse(),
+    };
+  }
+
+  async getBatchReport() {
+    const batches = await this.prisma.productBatch.findMany({
+      include: {
+        product: { select: { id: true, name: true, sku: true } },
+        supplier: { select: { id: true, name: true } },
+        warehouse: { select: { id: true, name: true, code: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const byStatus = batches.reduce<Record<string, number>>((acc, batch) => {
+      acc[batch.status] = (acc[batch.status] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      totalBatches: batches.length,
+      activeQuantity: batches
+        .filter((batch) => batch.status === 'ACTIVE')
+        .reduce((sum, batch) => sum + batch.remainingQty, 0),
+      consumedQuantity: batches.reduce(
+        (sum, batch) => sum + (batch.initialQuantity - batch.remainingQty),
+        0,
+      ),
+      byStatus,
+      recentBatches: batches.slice(0, 20),
+    };
+  }
+
+  async getAdvancedInventoryReport() {
+    const [inventoryValue, expiration, movement, batch] = await Promise.all([
+      this.getInventoryValueReport(),
+      this.getExpirationReport(30),
+      this.getStockMovementReport(30),
+      this.getBatchReport(),
+    ]);
+
+    return {
+      inventoryValue,
+      expiration,
+      movement,
+      batch,
+      generatedAt: new Date(),
+    };
+  }
 }
