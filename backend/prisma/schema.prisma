@@ -38,6 +38,12 @@ enum MessageRole {
   TOOL
 }
 
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
 // ── Admin (thêm mới so với CLAUDE.md) ─────────────────────
 
 model Admin {
@@ -90,6 +96,42 @@ model Product {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orderItems    OrderItem[]
+  stockMovements StockMovement[]
+}
+
+model Supplier {
+  id        String          @id @default(uuid())
+  name      String
+  contactName String?
+  phone     String?
+  email     String?
+  address   String?
+  note      String?
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  stockMovements StockMovement[]
+}
+
+model StockMovement {
+  id          String            @id @default(uuid())
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id])
+  supplierId  String?
+  supplier    Supplier?         @relation(fields: [supplierId], references: [id])
+  type        StockMovementType
+  quantity    Int
+  beforeStock Int
+  afterStock  Int
+  unitCost    Float?
+  reason      String?
+  reference   String?
+  createdAt   DateTime          @default(now())
+
+  @@index([productId])
+  @@index([supplierId])
+  @@index([type])
+  @@index([createdAt])
 }
 
 // ── Customer ───────────────────────────────────────────────
