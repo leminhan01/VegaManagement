@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Enums ──────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING       // Chờ xác nhận
+  CONFIRMED     // Đã xác nhận
+  PROCESSING    // Đang chuẩn bị
+  SHIPPED       // Đang giao
+  DELIVERED     // Đã giao
+  CANCELLED     // Đã hủy
+  REFUNDING     // Đang hoàn tiền
+  REFUNDED      // Đã hoàn tiền
+}
+
+enum PaymentMethod {
+  COD           // Thanh toán khi nhận hàng
+  BANK_TRANSFER // Chuyển khoản
+  MOMO          // Ví MoMo
+  VNPAY         // VNPay
+}
+
+enum ChatPlatform {
+  ZALO
+  MESSENGER
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+// ── Admin (thêm mới so với CLAUDE.md) ─────────────────────
+
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ── Category (thay thế enum ProductCategory) ──────────────
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  image       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+// ── Product ────────────────────────────────────────────────
+
+model Product {
+  id            String    @id @default(uuid())
+  name          String
+  slug          String    @unique
+  description   String
+  shortDesc     String?
+  price         Float
+  salePrice     Float?
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  tags          String[]
+  ingredients   String?
+  nutritionInfo Json?
+  allergens     String[]
+  origin        String?
+  images        String[]
+  stock         Int
+  minStock      Int       @default(10)
+  sku           String    @unique
+  unit          String    @default("cái")
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  orderItems    OrderItem[]
+}
+
+// ── Customer ───────────────────────────────────────────────
+
+model Customer {
+  id           String        @id @default(uuid())
+  name         String
+  phone        String        @unique
+  email        String?
+  address      String?
+  orders       Order[]
+  chatSessions ChatSession[]
+  createdAt    DateTime      @default(now())
+}
+
+// ── Order + OrderItem ─────────────────────────────────────
+
+model Order {
+  id              String       @id @default(uuid())
+  orderCode       String       @unique
+  customerId      String
+  customer        Customer     @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+  totalAmount     Float
+  discount        Float        @default(0)
+  finalAmount     Float
+  status          OrderStatus  @default(PENDING)
+  shippingAddress String
+  shippingPhone   String
+  note            String?
+  paymentMethod   PaymentMethod
+  paidAt          DateTime?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+}
+
+// ── Chat Session + Message ─────────────────────────────────
+
+model ChatSession {
+  id              String        @id @default(uuid())
+  customerId      String?
+  customer        Customer?     @relation(fields: [customerId], references: [id])
+  platform        ChatPlatform
+  platformUserId  String
+  guestPhone      String?
+  messages        ChatMessage[]
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([platform, platformUserId])
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id])
+  role      MessageRole
+  content   String
+  metadata  Json?
+  createdAt DateTime    @default(now())
+}

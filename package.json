@@ -1,0 +1,36 @@
+{
+  "name": "vegiflow-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VegiFlow — Hệ thống quản lý & chatbot thực phẩm chay",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "dev:all": "concurrently -n postgres,backend,admin,chatbot -c blue,green,cyan,magenta \"docker compose up postgres\" \"pnpm --filter backend dev\" \"pnpm --filter admin dev\" \"pnpm run dev:chatbot\"",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:admin": "pnpm --filter admin dev --port 4000",
+    "dev:chatbot": "cd chatbot && uvicorn src.main:app --reload --port 8000",
+    "db:migrate": "pnpm --filter backend exec -- npx prisma migrate dev",
+    "db:seed": "pnpm --filter backend exec -- npx prisma db seed",
+    "db:reset": "pnpm --filter backend exec -- npx prisma migrate reset --force",
+    "db:studio": "pnpm --filter backend exec -- npx prisma studio",
+    "setup": "pnpm install && pnpm --filter backend exec -- npx prisma generate",
+    "lint": "turbo lint",
+    "clean": "rimraf backend/dist admin/.next"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.5.4"
+  },
+  "packageManager": "pnpm@10.12.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "prisma",
+      "@prisma/engines",
+      "sharp",
+      "@nestjs/core",
+      "unrs-resolver"
+    ]
+  }
+}

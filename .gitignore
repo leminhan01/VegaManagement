@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Environment
+.env
+!.env.example
+
+# Build
+dist/
+build/
+.next/
+*.egg-info/
+
+# Turbo
+.turbo/
+
+# pnpm
+.pnpm-store/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads
+uploads/
+
+# Docker
+postgres-data/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Claude
+.claude/

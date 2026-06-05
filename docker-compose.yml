@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vegiflow-postgres
+    environment:
+      POSTGRES_DB: veg_shop
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5444:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d veg_shop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: vegiflow-backend
+    ports:
+      - "3000:3000"
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/veg_shop
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  admin:
+    build: ./admin
+    container_name: vegiflow-admin
+    ports:
+      - "4000:4000"
+    env_file: ./admin/.env
+    depends_on:
+      - backend
+
+  chatbot:
+    build: ./chatbot
+    container_name: vegiflow-chatbot
+    ports:
+      - "8000:8000"
+    env_file: ./chatbot/.env
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
