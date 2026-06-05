@@ -323,14 +323,19 @@ model InventoryActionLog {
 // ── Customer ───────────────────────────────────────────────
 
 model Customer {
-  id           String        @id @default(uuid())
-  name         String
-  phone        String        @unique
-  email        String?
-  address      String?
-  orders       Order[]
-  chatSessions ChatSession[]
-  createdAt    DateTime      @default(now())
+  id                String        @id @default(uuid())
+  name              String
+  phone             String        @unique
+  email             String?
+  address           String?
+  shippingAddresses Json?
+  tags              String[]      @default([])
+  group             String        @default("REGULAR")
+  note              String?
+  orders            Order[]
+  chatSessions      ChatSession[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @default(now()) @updatedAt
 }
 
 // ── Order + OrderItem ─────────────────────────────────────
