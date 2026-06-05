@@ -7,6 +7,7 @@ import {
   ValidateNested,
   Min,
   ArrayMinSize,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaymentMethod } from '@prisma/client';
@@ -48,4 +49,10 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount?: number;
 }

@@ -34,4 +34,12 @@ export class FilterOrdersDto {
   @IsOptional()
   @IsEnum(PaymentMethod)
   paymentMethod?: PaymentMethod;
+
+  @IsOptional()
+  @IsString()
+  sort?: string;
+
+  @IsOptional()
+  @IsString()
+  order?: 'asc' | 'desc';
 }

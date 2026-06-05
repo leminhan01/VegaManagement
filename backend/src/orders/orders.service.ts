@@ -1,61 +1,83 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateStatusDto } from './dto/update-status.dto';
-import { FilterOrdersDto } from './dto/filter-orders.dto';
-import { getPaginationParams, createPaginatedResult } from '../common/utils/pagination.util';
 import { OrderStatus, Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import {
+  createPaginatedResult,
+  getPaginationParams,
+  type PaginatedResult,
+} from '../common/utils/pagination.util';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { FilterOrdersDto } from './dto/filter-orders.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
+
+type OrderLine = {
+  productId: string;
+  quantity: number;
+};
+
+const ORDER_INCLUDE = {
+  customer: true,
+  items: {
+    include: {
+      product: {
+        include: {
+          category: true,
+        },
+      },
+      batch: true,
+    },
+  },
+} satisfies Prisma.OrderInclude;
 
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(filter: FilterOrdersDto) {
+  async findAll(
+    filter: FilterOrdersDto,
+  ): Promise<PaginatedResult<Record<string, unknown>>> {
     const params = getPaginationParams(filter);
     const where: Prisma.OrderWhereInput = {};
 
-    if (filter.status) {
-      where.status = filter.status;
-    }
-    if (filter.customerId) {
-      where.customerId = filter.customerId;
-    }
-    if (filter.paymentMethod) {
-      where.paymentMethod = filter.paymentMethod;
-    }
+    if (filter.status) where.status = filter.status;
+    if (filter.customerId) where.customerId = filter.customerId;
+    if (filter.paymentMethod) where.paymentMethod = filter.paymentMethod;
+
     if (filter.search) {
-      where.orderCode = { contains: filter.search, mode: 'insensitive' };
+      where.OR = [
+        { orderCode: { contains: filter.search, mode: 'insensitive' } },
+        { shippingPhone: { contains: filter.search, mode: 'insensitive' } },
+        { customer: { name: { contains: filter.search, mode: 'insensitive' } } },
+        { customer: { phone: { contains: filter.search, mode: 'insensitive' } } },
+      ];
     }
+
     if (filter.dateFrom || filter.dateTo) {
-      where.createdAt = {};
-      if (filter.dateFrom) {
-        where.createdAt.gte = new Date(filter.dateFrom);
-      }
-      if (filter.dateTo) {
-        where.createdAt.lte = new Date(filter.dateTo);
-      }
+      where.createdAt = {
+        ...(filter.dateFrom && { gte: this.startOfDay(filter.dateFrom) }),
+        ...(filter.dateTo && { lte: this.endOfDay(filter.dateTo) }),
+      };
     }
+
+    const sortableFields = new Set([
+      'createdAt',
+      'updatedAt',
+      'finalAmount',
+      'totalAmount',
+      'status',
+    ]);
+    const sort = params.sort && sortableFields.has(params.sort) ? params.sort : 'createdAt';
 
     const [data, total] = await Promise.all([
       this.prisma.order.findMany({
         where,
-        include: {
-          customer: {
-            select: { name: true, phone: true },
-          },
-          items: {
-            include: {
-              product: {
-                select: { name: true, images: true },
-              },
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
+        include: ORDER_INCLUDE,
+        orderBy: { [sort]: params.order },
         skip: (params.page - 1) * params.limit,
         take: params.limit,
       }),
@@ -68,237 +90,488 @@ export class OrdersService {
   async findOne(id: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
+      include: ORDER_INCLUDE,
     });
 
-    if (!order) {
-      throw new NotFoundException(`Không tìm thấy đơn hàng với ID: ${id}`);
-    }
-
+    if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
     return order;
   }
 
   async findByCode(orderCode: string) {
     const order = await this.prisma.order.findUnique({
       where: { orderCode },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
+      include: ORDER_INCLUDE,
     });
 
-    if (!order) {
-      throw new NotFoundException(`Không tìm thấy đơn hàng với mã: ${orderCode}`);
-    }
-
+    if (!order) throw new NotFoundException(`Order ${orderCode} not found`);
     return order;
   }
 
   async create(dto: CreateOrderDto) {
-    // Validate customer exists
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: dto.customerId },
-    });
-    if (!customer) {
-      throw new NotFoundException(`Không tìm thấy khách hàng với ID: ${dto.customerId}`);
-    }
+    return this.prisma.$transaction(async (tx) => {
+      await this.assertCustomerExists(tx, dto.customerId);
+      const normalizedItems = this.normalizeItems(dto.items);
+      const pricing = await this.getPricing(tx, normalizedItems);
+      const orderCode = await this.generateOrderCode(tx);
+      await this.decreaseStock(tx, normalizedItems, 'Order sale', orderCode);
 
-    // Validate all products exist and gather prices
-    const productIds = dto.items.map((item) => item.productId);
-    const products = await this.prisma.product.findMany({
-      where: { id: { in: productIds } },
-    });
+      const totalAmount = this.calculateTotal(normalizedItems, pricing.priceMap);
+      const discount = dto.discount ?? 0;
 
-    if (products.length !== productIds.length) {
-      const foundIds = new Set(products.map((p) => p.id));
-      const missingIds = productIds.filter((id) => !foundIds.has(id));
-      throw new NotFoundException(
-        `Không tìm thấy sản phẩm với ID: ${missingIds.join(', ')}`,
-      );
-    }
-
-    // Build price map (use salePrice if available)
-    const priceMap = new Map<string, number>();
-    for (const product of products) {
-      priceMap.set(product.id, product.salePrice ?? product.price);
-    }
-
-    // Calculate total
-    const totalAmount = dto.items.reduce(
-      (sum, item) => sum + priceMap.get(item.productId)! * item.quantity,
-      0,
-    );
-
-    // Generate order code: VF-YYYYMMDD-NNN
-    const orderCode = await this.generateOrderCode();
-
-    const order = await this.prisma.order.create({
-      data: {
-        orderCode,
-        customerId: dto.customerId,
-        totalAmount,
-        discount: 0,
-        finalAmount: totalAmount,
-        shippingAddress: dto.shippingAddress,
-        shippingPhone: dto.shippingPhone,
-        note: dto.note,
-        paymentMethod: dto.paymentMethod,
-        items: {
-          create: dto.items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: priceMap.get(item.productId)!,
-          })),
-        },
-      },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
+      return tx.order.create({
+        data: {
+          orderCode,
+          customerId: dto.customerId,
+          totalAmount,
+          discount,
+          finalAmount: Math.max(0, totalAmount - discount),
+          shippingAddress: dto.shippingAddress,
+          shippingPhone: dto.shippingPhone,
+          note: dto.note,
+          paymentMethod: dto.paymentMethod,
+          items: {
+            create: normalizedItems.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: pricing.priceMap.get(item.productId)!,
+            })),
           },
         },
-      },
+        include: ORDER_INCLUDE,
+      });
     });
+  }
 
-    return order;
+  async update(id: string, dto: UpdateOrderDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      });
+      if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
+      if (['SHIPPED', 'DELIVERED', 'REFUNDING', 'REFUNDED'].includes(order.status)) {
+        throw new BadRequestException('Only pending, confirmed, processing, or cancelled orders can be edited');
+      }
+
+      if (dto.customerId) await this.assertCustomerExists(tx, dto.customerId);
+
+      let totalAmount = order.totalAmount;
+      let discount = dto.discount ?? order.discount;
+
+      if (dto.items) {
+        const oldItems = order.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        }));
+        if (this.hasReservedStock(order.status)) {
+          await this.increaseStock(tx, oldItems, 'Order edit rollback', order.orderCode);
+        }
+
+        const newItems = this.normalizeItems(dto.items);
+        const pricing = await this.getPricing(tx, newItems);
+        if (this.hasReservedStock(order.status)) {
+          await this.decreaseStock(tx, newItems, 'Order edit', order.orderCode);
+        }
+
+        totalAmount = this.calculateTotal(newItems, pricing.priceMap);
+        await tx.orderItem.deleteMany({ where: { orderId: id } });
+        await tx.orderItem.createMany({
+          data: newItems.map((item) => ({
+            orderId: id,
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: pricing.priceMap.get(item.productId)!,
+          })),
+        });
+      }
+
+      if (discount > totalAmount) discount = totalAmount;
+
+      return tx.order.update({
+        where: { id },
+        data: {
+          ...(dto.customerId !== undefined && { customerId: dto.customerId }),
+          ...(dto.shippingAddress !== undefined && {
+            shippingAddress: dto.shippingAddress,
+          }),
+          ...(dto.shippingPhone !== undefined && { shippingPhone: dto.shippingPhone }),
+          ...(dto.note !== undefined && { note: dto.note }),
+          ...(dto.paymentMethod !== undefined && {
+            paymentMethod: dto.paymentMethod,
+          }),
+          totalAmount,
+          discount,
+          finalAmount: Math.max(0, totalAmount - discount),
+        },
+        include: ORDER_INCLUDE,
+      });
+    });
   }
 
   async updateStatus(id: string, dto: UpdateStatusDto) {
-    const order = await this.prisma.order.findUnique({ where: { id } });
-    if (!order) {
-      throw new NotFoundException(`Không tìm thấy đơn hàng với ID: ${id}`);
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      });
+      if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
 
-    const newStatus = dto.status;
-    const currentStatus = order.status;
+      this.validateStatusTransition(order.status, dto.status);
+      if (dto.status === OrderStatus.REFUNDED) {
+        await this.increaseStock(
+          tx,
+          order.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+          'Order refund',
+          order.orderCode,
+        );
+      }
 
-    // Validate transition
-    this.validateStatusTransition(currentStatus, newStatus);
-
-    // Prepare update data with timestamps
-    const updateData: Prisma.OrderUpdateInput = { status: newStatus };
-
-    if (newStatus === OrderStatus.SHIPPED) {
-      updateData.shippedAt = new Date();
-    }
-    if (newStatus === OrderStatus.DELIVERED) {
-      updateData.deliveredAt = new Date();
-    }
-
-    const updated = await this.prisma.order.update({
-      where: { id },
-      data: updateData,
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
+      return tx.order.update({
+        where: { id },
+        data: {
+          status: dto.status,
+          ...(dto.status === OrderStatus.SHIPPED && { shippedAt: new Date() }),
+          ...(dto.status === OrderStatus.DELIVERED && {
+            deliveredAt: new Date(),
+            paidAt: order.paidAt ?? new Date(),
+          }),
         },
-      },
+        include: ORDER_INCLUDE,
+      });
     });
-
-    return updated;
   }
 
   async cancel(id: string) {
-    const order = await this.prisma.order.findUnique({ where: { id } });
-    if (!order) {
-      throw new NotFoundException(`Không tìm thấy đơn hàng với ID: ${id}`);
-    }
-
-    if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.CONFIRMED) {
-      throw new BadRequestException(
-        `Chỉ có thể hủy đơn hàng ở trạng thái PENDING hoặc CONFIRMED. Trạng thái hiện tại: ${order.status}`,
-      );
-    }
-
-    const updated = await this.prisma.order.update({
-      where: { id },
-      data: { status: OrderStatus.CANCELLED },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    });
-
-    return updated;
+    return this.changeToTerminalStatus(id, OrderStatus.CANCELLED, 'Order cancel');
   }
 
-  /**
-   * Generate order code format: VF-YYYYMMDD-NNN
-   * NNN is a sequential number for the day, starting from 001
-   */
-  private async generateOrderCode(): Promise<string> {
+  async refund(id: string) {
+    return this.changeToTerminalStatus(id, OrderStatus.REFUNDED, 'Order refund');
+  }
+
+  async remove(id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      });
+      if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
+      if (!['PENDING', 'CANCELLED'].includes(order.status)) {
+        throw new BadRequestException('Only pending or cancelled orders can be deleted');
+      }
+
+      if (this.hasReservedStock(order.status)) {
+        await this.increaseStock(
+          tx,
+          order.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+          'Order delete',
+          order.orderCode,
+        );
+      }
+
+      await tx.orderItem.deleteMany({ where: { orderId: id } });
+      return tx.order.delete({ where: { id } });
+    });
+  }
+
+  async getInvoice(id: string) {
+    const order = await this.findOne(id);
+    return {
+      invoiceNo: `INV-${order.orderCode}`,
+      issuedAt: new Date().toISOString(),
+      seller: {
+        name: process.env.STORE_NAME ?? 'VeggieShop',
+        phone: process.env.STORE_PHONE ?? '',
+        address: process.env.STORE_ADDRESS ?? '',
+      },
+      order,
+      totals: {
+        totalAmount: order.totalAmount,
+        discount: order.discount,
+        finalAmount: order.finalAmount,
+      },
+    };
+  }
+
+  async getReport(filter: FilterOrdersDto) {
+    const where: Prisma.OrderWhereInput = {};
+    if (filter.status) where.status = filter.status;
+    if (filter.paymentMethod) where.paymentMethod = filter.paymentMethod;
+    if (filter.dateFrom || filter.dateTo) {
+      where.createdAt = {
+        ...(filter.dateFrom && { gte: this.startOfDay(filter.dateFrom) }),
+        ...(filter.dateTo && { lte: this.endOfDay(filter.dateTo) }),
+      };
+    }
+
+    const [orders, byStatus, byPayment, topProducts] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        include: { items: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.order.groupBy({
+        by: ['status'],
+        where,
+        _count: { _all: true },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.order.groupBy({
+        by: ['paymentMethod'],
+        where,
+        _count: { _all: true },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.orderItem.groupBy({
+        by: ['productId'],
+        where: { order: where },
+        _sum: { quantity: true },
+        _count: { _all: true },
+        orderBy: { _sum: { quantity: 'desc' } },
+        take: 8,
+      }),
+    ]);
+
+    const productIds = topProducts.map((item) => item.productId);
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, name: true, sku: true, unit: true },
+    });
+    const productMap = new Map(products.map((product) => [product.id, product]));
+
+    const daily = new Map<string, { orders: number; revenue: number }>();
+    for (const order of orders) {
+      const key = order.createdAt.toISOString().slice(0, 10);
+      const current = daily.get(key) ?? { orders: 0, revenue: 0 };
+      current.orders += 1;
+      if (order.status === OrderStatus.DELIVERED) current.revenue += order.finalAmount;
+      daily.set(key, current);
+    }
+
+    return {
+      totalOrders: orders.length,
+      revenue: orders
+        .filter((order) => order.status === OrderStatus.DELIVERED)
+        .reduce((sum, order) => sum + order.finalAmount, 0),
+      pendingValue: orders
+        .filter((order) =>
+          ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(order.status),
+        )
+        .reduce((sum, order) => sum + order.finalAmount, 0),
+      averageOrderValue:
+        orders.length === 0
+          ? 0
+          : orders.reduce((sum, order) => sum + order.finalAmount, 0) / orders.length,
+      byStatus,
+      byPayment,
+      topProducts: topProducts.map((item) => ({
+        product: productMap.get(item.productId) ?? { id: item.productId },
+        quantity: item._sum.quantity ?? 0,
+        orderLines: item._count._all,
+      })),
+      daily: Array.from(daily.entries()).map(([day, value]) => ({ day, ...value })),
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  private async changeToTerminalStatus(
+    id: string,
+    status: Extract<OrderStatus, 'CANCELLED' | 'REFUNDED'>,
+    reason: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      });
+      if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
+
+      if (status === OrderStatus.CANCELLED) {
+        if (!['PENDING', 'CONFIRMED', 'PROCESSING'].includes(order.status)) {
+          throw new BadRequestException('Only pending, confirmed, or processing orders can be cancelled');
+        }
+      } else if (!['DELIVERED', 'REFUNDING'].includes(order.status)) {
+        throw new BadRequestException('Only delivered or refunding orders can be refunded');
+      }
+
+      await this.increaseStock(
+        tx,
+        order.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+        reason,
+        order.orderCode,
+      );
+
+      return tx.order.update({
+        where: { id },
+        data: { status },
+        include: ORDER_INCLUDE,
+      });
+    });
+  }
+
+  private async assertCustomerExists(tx: Prisma.TransactionClient, customerId: string) {
+    const customer = await tx.customer.findUnique({ where: { id: customerId } });
+    if (!customer) throw new NotFoundException(`Customer with ID ${customerId} not found`);
+  }
+
+  private normalizeItems(items: OrderLine[]): OrderLine[] {
+    if (!items.length) throw new BadRequestException('Order must have at least one item');
+
+    const map = new Map<string, number>();
+    for (const item of items) {
+      if (!item.productId) throw new BadRequestException('Product is required');
+      if (item.quantity <= 0) throw new BadRequestException('Quantity must be greater than 0');
+      map.set(item.productId, (map.get(item.productId) ?? 0) + item.quantity);
+    }
+
+    return Array.from(map.entries()).map(([productId, quantity]) => ({
+      productId,
+      quantity,
+    }));
+  }
+
+  private async getPricing(tx: Prisma.TransactionClient, items: OrderLine[]) {
+    const productIds = items.map((item) => item.productId);
+    const products = await tx.product.findMany({
+      where: { id: { in: productIds }, isActive: true },
+      select: {
+        id: true,
+        price: true,
+        salePrice: true,
+      },
+    });
+    if (products.length !== productIds.length) {
+      throw new NotFoundException('One or more active products were not found');
+    }
+
+    return {
+      priceMap: new Map(
+        products.map((product) => [
+          product.id,
+          product.salePrice ?? product.price,
+        ]),
+      ),
+    };
+  }
+
+  private calculateTotal(items: OrderLine[], priceMap: Map<string, number>) {
+    return items.reduce(
+      (sum, item) => sum + (priceMap.get(item.productId) ?? 0) * item.quantity,
+      0,
+    );
+  }
+
+  private async decreaseStock(
+    tx: Prisma.TransactionClient,
+    items: OrderLine[],
+    reason: string,
+    reference?: string,
+  ) {
+    for (const item of items) {
+      const product = await tx.product.findUnique({
+        where: { id: item.productId },
+        select: { id: true, stock: true },
+      });
+      if (!product) throw new NotFoundException(`Product with ID ${item.productId} not found`);
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(`Product ${item.productId} stock is not enough`);
+      }
+
+      const afterStock = product.stock - item.quantity;
+      await tx.stockMovement.create({
+        data: {
+          productId: item.productId,
+          type: 'OUT',
+          quantity: item.quantity,
+          beforeStock: product.stock,
+          afterStock,
+          reason,
+          reference,
+        },
+      });
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { stock: afterStock },
+      });
+    }
+  }
+
+  private async increaseStock(
+    tx: Prisma.TransactionClient,
+    items: OrderLine[],
+    reason: string,
+    reference?: string,
+  ) {
+    for (const item of items) {
+      const product = await tx.product.findUnique({
+        where: { id: item.productId },
+        select: { id: true, stock: true },
+      });
+      if (!product) throw new NotFoundException(`Product with ID ${item.productId} not found`);
+
+      const afterStock = product.stock + item.quantity;
+      await tx.stockMovement.create({
+        data: {
+          productId: item.productId,
+          type: 'IN',
+          quantity: item.quantity,
+          beforeStock: product.stock,
+          afterStock,
+          reason,
+          reference,
+        },
+      });
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { stock: afterStock },
+      });
+    }
+  }
+
+  private hasReservedStock(status: OrderStatus) {
+    return status !== OrderStatus.CANCELLED && status !== OrderStatus.REFUNDED;
+  }
+
+  private async generateOrderCode(tx: Prisma.TransactionClient): Promise<string> {
     const today = new Date();
-    const dateStr = today.getFullYear().toString() +
+    const dateStr =
+      today.getFullYear().toString() +
       String(today.getMonth() + 1).padStart(2, '0') +
       String(today.getDate()).padStart(2, '0');
-
     const prefix = `VF-${dateStr}`;
-
-    // Find the last order code for today
-    const lastOrder = await this.prisma.order.findFirst({
-      where: {
-        orderCode: { startsWith: prefix },
-      },
+    const lastOrder = await tx.order.findFirst({
+      where: { orderCode: { startsWith: prefix } },
       orderBy: { orderCode: 'desc' },
       select: { orderCode: true },
     });
 
-    let sequence = 1;
-    if (lastOrder) {
-      const parts = lastOrder.orderCode.split('-');
-      const lastSeq = parseInt(parts[parts.length - 1], 10);
-      sequence = lastSeq + 1;
-    }
+    const sequence = lastOrder
+      ? Number(lastOrder.orderCode.split('-').at(-1) ?? '0') + 1
+      : 1;
 
     return `${prefix}-${String(sequence).padStart(3, '0')}`;
   }
 
-  /**
-   * Validate that the status transition is allowed
-   */
   private validateStatusTransition(current: OrderStatus, next: OrderStatus): void {
-    // Cancelled orders cannot be transitioned
-    if (current === OrderStatus.CANCELLED) {
-      throw new BadRequestException('Không thể thay đổi trạng thái đơn hàng đã hủy.');
+    if (current === next) return;
+    if (current === OrderStatus.CANCELLED || current === OrderStatus.REFUNDED) {
+      throw new BadRequestException('Terminal orders cannot change status');
     }
-
-    // Cannot cancel via updateStatus — use the cancel endpoint
     if (next === OrderStatus.CANCELLED) {
-      throw new BadRequestException('Vui lòng dùng API hủy đơn hàng để hủy.');
+      throw new BadRequestException('Use the cancel endpoint to cancel orders');
     }
 
-    // Refunded/refunding transitions are only from DELIVERED
-    if (
-      (next === OrderStatus.REFUNDING || next === OrderStatus.REFUNDED) &&
-      current !== OrderStatus.DELIVERED
-    ) {
-      throw new BadRequestException(
-        'Chỉ có thể hoàn tiền đơn hàng đã giao thành công.',
-      );
-    }
-
-    // Define valid forward transitions
     const validTransitions: Record<OrderStatus, OrderStatus[]> = {
-      [OrderStatus.PENDING]: [OrderStatus.CONFIRMED],
+      [OrderStatus.PENDING]: [OrderStatus.CONFIRMED, OrderStatus.PROCESSING],
       [OrderStatus.CONFIRMED]: [OrderStatus.PROCESSING],
       [OrderStatus.PROCESSING]: [OrderStatus.SHIPPED],
       [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED],
@@ -311,8 +584,20 @@ export class OrdersService {
     const allowed = validTransitions[current] ?? [];
     if (!allowed.includes(next)) {
       throw new BadRequestException(
-        `Không thể chuyển từ ${current} sang ${next}. Các trạng thái hợp lệ tiếp theo: ${allowed.join(', ') || 'Không có'}`,
+        `Cannot transition order from ${current} to ${next}`,
       );
     }
+  }
+
+  private startOfDay(value: string) {
+    const date = new Date(value);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  private endOfDay(value: string) {
+    const date = new Date(value);
+    date.setHours(23, 59, 59, 999);
+    return date;
   }
 }
