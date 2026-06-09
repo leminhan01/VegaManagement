@@ -1,0 +1,169 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="footer" role="contentinfo">
+  <div class="container footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="/" class="footer-logo" aria-label="VegiFlow — Trang chủ">
+          <span aria-hidden="true">🌿</span>
+          <span class="footer-logo-name">VegiFlow</span>
+        </a>
+        <p class="footer-tagline">Cửa hàng thực phẩm chay online — tư vấn thông minh, giao hàng tận nơi.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Liên kết chân trang">
+        <div class="footer-nav-group">
+          <h3 class="footer-nav-title">Sản phẩm</h3>
+          <ul class="footer-nav-links" role="list">
+            <li><a href="#categories">Danh mục</a></li>
+            <li><a href="#features">Dịch vụ</a></li>
+          </ul>
+        </div>
+        <div class="footer-nav-group">
+          <h3 class="footer-nav-title">Developer</h3>
+          <ul class="footer-nav-links" role="list">
+            <li><a href="http://localhost:3000/api/docs" target="_blank" rel="noopener">API Docs</a></li>
+            <li><a href="http://localhost:8000/docs" target="_blank" rel="noopener">Chatbot API</a></li>
+            <li><a href="http://localhost:8000/embeddings/search" target="_blank" rel="noopener">Semantic Search</a></li>
+          </ul>
+        </div>
+        <div class="footer-nav-group">
+          <h3 class="footer-nav-title">Pháp lý</h3>
+          <ul class="footer-nav-links" role="list">
+            <li><a href="/privacy">Chính sách bảo mật</a></li>
+            <li><a href="/terms">Điều khoản sử dụng</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; {currentYear} <a href="/">VegiFlow</a>. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--color-text);
+    color: rgba(255, 255, 255, 0.6);
+    padding-top: var(--space-4xl);
+    padding-bottom: var(--space-2xl);
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xl);
+  }
+
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3xl);
+    flex-wrap: wrap;
+  }
+
+  /* Brand */
+  .footer-brand {
+    max-width: 300px;
+  }
+
+  .footer-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    margin-bottom: var(--space-md);
+  }
+
+  .footer-logo:hover {
+    color: #fff;
+  }
+
+  .footer-logo-name {
+    letter-spacing: var(--ls-tight);
+  }
+
+  .footer-tagline {
+    font-size: var(--text-small);
+    line-height: var(--lh-body);
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  /* Nav */
+  .footer-nav {
+    display: flex;
+    gap: var(--space-3xl);
+  }
+
+  .footer-nav-title {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: var(--space-md);
+  }
+
+  .footer-nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .footer-nav-links a {
+    font-size: var(--text-small);
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .footer-nav-links a:hover {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  /* Bottom */
+  .footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: var(--space-xl);
+  }
+
+  .footer-copy {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .footer-copy a {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+  }
+
+  .footer-copy a:hover {
+    color: var(--color-primary);
+  }
+
+  /* ── Responsive ──────────────────────────── */
+  @media (max-width: 640px) {
+    .footer-top {
+      flex-direction: column;
+      gap: var(--space-2xl);
+    }
+
+    .footer-brand {
+      max-width: none;
+    }
+
+    .footer-nav {
+      flex-direction: column;
+      gap: var(--space-xl);
+    }
+  }
+</style>

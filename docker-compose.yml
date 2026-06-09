@@ -50,5 +50,16 @@ services:
     depends_on:
       - backend
 
+  landing:
+    build:
+      context: ./landing
+      args:
+        PUBLIC_CHATBOT_API_URL: http://localhost:8000
+    container_name: vegiflow-landing
+    ports:
+      - "3001:3001"
+    depends_on:
+      - chatbot
+
 volumes:
   pgdata:

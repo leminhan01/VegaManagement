@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "dev:all": "concurrently -n postgres,backend,admin,chatbot -c blue,green,cyan,magenta \"docker compose up postgres\" \"pnpm --filter backend dev\" \"pnpm --filter admin dev\" \"pnpm run dev:chatbot\"",
+    "dev:all": "concurrently -n postgres,backend,admin,chatbot,landing -c blue,green,cyan,magenta,yellow \"docker compose up postgres\" \"pnpm --filter backend dev\" \"pnpm --filter admin dev\" \"pnpm run dev:chatbot\" \"pnpm run dev:landing\"",
     "dev:backend": "pnpm --filter backend dev",
     "dev:admin": "pnpm --filter admin dev --port 4000",
     "dev:chatbot": "cd chatbot && uvicorn src.main:app --reload --port 8000",
+    "dev:landing": "pnpm --filter landing dev",
     "db:migrate": "pnpm --filter backend exec -- npx prisma migrate dev",
     "db:seed": "pnpm --filter backend exec -- npx prisma db seed",
     "db:reset": "pnpm --filter backend exec -- npx prisma migrate reset --force",

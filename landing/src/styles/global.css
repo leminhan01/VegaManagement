@@ -1,0 +1,222 @@
+/* ═══════════════════════════════════════════
+   VegiFlow Landing — Design Tokens & Base
+   ═══════════════════════════════════════════ */
+
+/* ── Google Fonts: Outfit ─────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Design Tokens ────────────────────────── */
+:root {
+  /* ─ Colors ─ */
+  --color-primary: #22a65a;
+  --color-primary-hover: #1d8f4e;
+  --color-primary-light: #d1fae5;
+  --color-primary-muted: rgba(34, 166, 90, 0.08);
+  --color-deep: #14532d;
+  --color-deep-hover: #0f3d20;
+
+  /* Warm grays */
+  --color-bg: #faf9f7;
+  --color-bg-warm: #f5f3ef;
+  --color-surface: #ffffff;
+  --color-border: #e5e0d8;
+  --color-border-light: #f0ece6;
+  --color-text: #1a1815;
+  --color-text-secondary: #6b6560;
+  --color-text-muted: #9a938c;
+
+  /* ─ Typography ─ */
+  --font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+
+  /* Fluid type scale */
+  --text-display: clamp(2.5rem, 5vw, 4.5rem);
+  --text-h2: clamp(1.75rem, 3vw, 2.5rem);
+  --text-h3: clamp(1.25rem, 2vw, 1.5rem);
+  --text-body: 1.125rem;
+  --text-small: 0.875rem;
+  --text-xs: 0.75rem;
+
+  /* Line heights */
+  --lh-tight: 1.15;
+  --lh-heading: 1.25;
+  --lh-body: 1.7;
+  --lh-relaxed: 1.9;
+
+  /* Letter spacing */
+  --ls-tight: -0.025em;
+  --ls-normal: 0;
+  --ls-wide: 0.025em;
+  --ls-wider: 0.05em;
+
+  /* ─ Spacing ─ */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+  --space-5xl: 8rem;
+  --space-section: clamp(5rem, 8vw, 8rem);
+
+  /* ─ Layout ─ */
+  --container-max: 1280px;
+  --container-narrow: 960px;
+  --container-padding: clamp(1.25rem, 4vw, 3rem);
+
+  /* ─ Border Radius ─ */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  /* ─ Shadows (tinted green) ─ */
+  --shadow-sm: 0 1px 3px rgba(34, 166, 90, 0.06);
+  --shadow-md: 0 4px 16px rgba(34, 166, 90, 0.08);
+  --shadow-lg: 0 8px 32px rgba(34, 166, 90, 0.1);
+  --shadow-xl: 0 16px 48px rgba(34, 166, 90, 0.12);
+  --shadow-glow: 0 0 40px rgba(34, 166, 90, 0.15);
+
+  /* ─ Transitions ─ */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  /* ─ Z-index scale ─ */
+  --z-base: 1;
+  --z-overlay: 10;
+  --z-nav: 100;
+  --z-chat: 1000;
+  --z-chat-window: 1001;
+}
+
+/* ── Reset & Base ─────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--duration-fast) ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* ── Accessibility ────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: var(--text-small);
+  font-weight: 600;
+  z-index: 10000;
+  transition: top var(--duration-fast) ease;
+}
+
+.skip-link:focus {
+  top: var(--space-md);
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Container ────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+.container--narrow {
+  max-width: var(--container-narrow);
+}
+
+/* ── Noise Overlay ────────────────────────── */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-overlay);
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Scroll Reveal ────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--duration-slow) var(--ease-out),
+              transform var(--duration-slow) var(--ease-out);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 100ms; }
+.reveal-delay-2 { transition-delay: 200ms; }
+.reveal-delay-3 { transition-delay: 300ms; }
+.reveal-delay-4 { transition-delay: 400ms; }
+.reveal-delay-5 { transition-delay: 500ms; }
+
+/* ── Utility ──────────────────────────────── */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}

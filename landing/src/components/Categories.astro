@@ -1,0 +1,243 @@
+---
+const categories = [
+  {
+    icon: '🥬',
+    title: 'Thực phẩm tươi',
+    desc: 'Rau củ, trái cây sạch',
+    image: 'https://picsum.photos/seed/veg-fresh/600/400',
+    span: 'wide',
+  },
+  {
+    icon: '🫘',
+    title: 'Thực phẩm khô',
+    desc: 'Hạt, đậu, nấm khô',
+    image: 'https://picsum.photos/seed/veg-dried/400/400',
+  },
+  {
+    icon: '🧂',
+    title: 'Gia vị',
+    desc: 'Nước mắm chay, tương',
+    image: 'https://picsum.photos/seed/veg-spice/400/400',
+  },
+  {
+    icon: '❄️',
+    title: 'Đông lạnh',
+    desc: 'Thịt thực vật, há cảo',
+    image: 'https://picsum.photos/seed/veg-frozen/400/400',
+  },
+  {
+    icon: '🍵',
+    title: 'Đồ uống',
+    desc: 'Trà, nước ép, sinh tố',
+    image: 'https://picsum.photos/seed/veg-drink/400/400',
+  },
+  {
+    icon: '🍿',
+    title: 'Đồ ăn vặt',
+    desc: 'Snack chay, hạt rang',
+    image: 'https://picsum.photos/seed/veg-snack/400/400',
+  },
+  {
+    icon: '💪',
+    title: 'Thực phẩm bổ sung',
+    desc: 'Vitamin, protein thực vật',
+    image: 'https://picsum.photos/seed/veg-supplement/400/400',
+  },
+  {
+    icon: '🍱',
+    title: 'Món ăn sẵn',
+    desc: 'Đồ hộp, mì chay',
+    image: 'https://picsum.photos/seed/veg-ready/600/400',
+    span: 'wide',
+  },
+];
+---
+
+<section class="categories" id="categories" aria-labelledby="categories-title">
+  <div class="container">
+    <header class="section-header reveal">
+      <p class="section-eyebrow">Khám phá</p>
+      <h2 id="categories-title" class="section-title text-balance">Danh mục sản phẩm</h2>
+      <p class="section-desc text-pretty">Đa dạng thực phẩm chay từ khắp nơi trên thế giới</p>
+    </header>
+
+    <div class="categories-grid">
+      {categories.map((cat, i) => (
+        <article
+          class:list={['category-card', 'reveal', `reveal-delay-${(i % 4) + 1}`, { 'category-card--wide': cat.span === 'wide' }]}
+        >
+          <div class="category-image" aria-hidden="true">
+            <img src={cat.image} alt="" loading="lazy" />
+          </div>
+          <div class="category-overlay"></div>
+          <div class="category-content">
+            <span class="category-icon" aria-hidden="true">{cat.icon}</span>
+            <h3 class="category-title">{cat.title}</h3>
+            <p class="category-desc">{cat.desc}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .categories {
+    padding-block: var(--space-section);
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: var(--space-4xl);
+  }
+
+  .section-eyebrow {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: var(--text-h2);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+    color: var(--color-deep);
+    margin-bottom: var(--space-sm);
+  }
+
+  .section-desc {
+    font-size: var(--text-body);
+    color: var(--color-text-secondary);
+    max-width: 480px;
+    margin-inline: auto;
+  }
+
+  /* ── Grid ───────────────────────────────── */
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+  }
+
+  /* ── Card ───────────────────────────────── */
+  .category-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 1;
+    cursor: pointer;
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out);
+  }
+
+  .category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .category-card:active {
+    transform: scale(0.98) translateY(0);
+  }
+
+  .category-card--wide {
+    grid-column: span 2;
+    aspect-ratio: 2 / 1;
+  }
+
+  /* Image */
+  .category-image {
+    position: absolute;
+    inset: 0;
+  }
+
+  .category-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+
+  .category-card:hover .category-image img {
+    transform: scale(1.05);
+  }
+
+  /* Overlay */
+  .category-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(20, 83, 45, 0.1) 0%,
+      rgba(20, 83, 45, 0.6) 100%
+    );
+    transition: background var(--duration-normal) ease;
+  }
+
+  .category-card:hover .category-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(20, 83, 45, 0.2) 0%,
+      rgba(20, 83, 45, 0.7) 100%
+    );
+  }
+
+  /* Content */
+  .category-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-lg);
+    color: #fff;
+  }
+
+  .category-icon {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-xs);
+    display: block;
+  }
+
+  .category-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+    letter-spacing: var(--ls-tight);
+  }
+
+  .category-desc {
+    font-size: var(--text-xs);
+    opacity: 0.8;
+    font-weight: 400;
+  }
+
+  /* ── Responsive ──────────────────────────── */
+  @media (max-width: 900px) {
+    .categories-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .category-card--wide {
+      grid-column: span 2;
+    }
+  }
+
+  @media (max-width: 540px) {
+    .categories-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .category-card--wide {
+      grid-column: span 1;
+      aspect-ratio: 16 / 9;
+    }
+
+    .category-card {
+      aspect-ratio: 4 / 3;
+    }
+  }
+</style>

@@ -1,0 +1,281 @@
+---
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <!-- Background image overlay -->
+  <div class="hero-bg" aria-hidden="true">
+    <img
+      src="https://picsum.photos/seed/vegiflow-hero/1920/1080"
+      alt=""
+      loading="eager"
+    />
+  </div>
+  <div class="hero-gradient" aria-hidden="true"></div>
+
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <p class="hero-badge reveal">🌿 Thực phẩm chay online</p>
+      <h1 id="hero-title" class="hero-title text-balance reveal reveal-delay-1">
+        Thực phẩm chay<br />
+        <span class="hero-highlight">tươi sạch</span>,<br />
+        giao tận nơi
+      </h1>
+      <p class="hero-subtitle text-pretty reveal reveal-delay-2">
+        VegiFlow — hơn 100 sản phẩm organic, thực phẩm tươi, khô, đông lạnh.
+        Tư vấn miễn phí bởi AI assistant 24/7.
+      </p>
+      <div class="hero-actions reveal reveal-delay-3">
+        <button class="btn-primary" id="hero-chat-btn">
+          <span class="btn-icon" aria-hidden="true">💬</span>
+          Chat tư vấn ngay
+        </button>
+        <a href="#categories" class="btn-ghost">
+          Xem sản phẩm
+          <span class="btn-arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <div class="hero-features reveal reveal-delay-4">
+        <div class="hero-feature">
+          <span class="hero-feature-icon" aria-hidden="true">🚚</span>
+          <div>
+            <span class="hero-feature-label">Giao hàng 2-4h</span>
+          </div>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon" aria-hidden="true">🌱</span>
+          <div>
+            <span class="hero-feature-label">100% Thực vật</span>
+          </div>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon" aria-hidden="true">✅</span>
+          <div>
+            <span class="hero-feature-label">VietGAP & Organic</span>
+          </div>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon" aria-hidden="true">🤖</span>
+          <div>
+            <span class="hero-feature-label">AI Tư vấn 24/7</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  document.getElementById('hero-chat-btn').addEventListener('click', function () {
+    var chatBtn = document.querySelector('.vf-chat-btn');
+    if (chatBtn) chatBtn.click();
+  });
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+  }
+
+  .hero-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.12;
+  }
+
+  .hero-gradient {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 50%, rgba(34, 166, 90, 0.08), transparent),
+      radial-gradient(ellipse 60% 80% at 80% 30%, rgba(20, 83, 45, 0.04), transparent),
+      linear-gradient(175deg, var(--color-bg) 0%, rgba(209, 250, 229, 0.2) 50%, var(--color-bg-warm) 100%);
+  }
+
+  .hero-inner {
+    display: flex;
+    align-items: center;
+    padding-block: var(--space-5xl);
+  }
+
+  .hero-content {
+    max-width: 680px;
+  }
+
+  /* Badge */
+  .hero-badge {
+    display: inline-block;
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--color-primary);
+    background: var(--color-primary-muted);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-xl);
+    letter-spacing: var(--ls-wide);
+  }
+
+  /* Title */
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    font-weight: 800;
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    color: var(--color-deep);
+    margin-bottom: var(--space-xl);
+  }
+
+  .hero-highlight {
+    color: var(--color-primary);
+    position: relative;
+  }
+
+  /* Subtitle */
+  .hero-subtitle {
+    font-size: 1.2rem;
+    font-weight: 400;
+    line-height: var(--lh-relaxed);
+    color: var(--color-text-secondary);
+    max-width: 520px;
+    margin-bottom: var(--space-2xl);
+  }
+
+  /* Actions */
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4xl);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-2xl);
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+    transition:
+      background var(--duration-fast) ease,
+      transform var(--duration-fast) ease,
+      box-shadow var(--duration-normal) ease;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    color: #fff;
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98) translateY(0);
+  }
+
+  .btn-icon {
+    font-size: 1.1rem;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-full);
+    transition:
+      color var(--duration-fast) ease,
+      background var(--duration-fast) ease;
+  }
+
+  .btn-ghost:hover {
+    color: var(--color-primary);
+    background: var(--color-primary-muted);
+    text-decoration: none;
+  }
+
+  .btn-arrow {
+    transition: transform var(--duration-fast) ease;
+  }
+
+  .btn-ghost:hover .btn-arrow {
+    transform: translateX(4px);
+  }
+
+  /* Features */
+  .hero-features {
+    display: flex;
+    gap: var(--space-2xl);
+    flex-wrap: wrap;
+  }
+
+  .hero-feature {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .hero-feature-icon {
+    font-size: 1.25rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hero-feature-label {
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+  }
+
+  /* ── Responsive ──────────────────────────── */
+  @media (max-width: 640px) {
+    .hero-title {
+      font-size: clamp(2rem, 8vw, 2.75rem);
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-primary,
+    .btn-ghost {
+      justify-content: center;
+    }
+
+    .hero-features {
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+  }
+</style>

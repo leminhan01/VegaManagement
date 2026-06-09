@@ -1,0 +1,19 @@
+{
+  "name": "landing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 3001",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0 --port 3001",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "astro": "^5.7.10"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@astrojs/check": "^0.9.4"
+  }
+}

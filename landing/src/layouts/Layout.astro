@@ -1,0 +1,59 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'VegiFlow — Cửa hàng thực phẩm chay online',
+  description = 'VegiFlow - Cửa hàng thực phẩm chay online. Tư vấn sản phẩm thông minh bằng AI, giao hàng tận nơi.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="/images/og-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Global Styles -->
+    <style is:global>
+      @import '../styles/global.css';
+    </style>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <slot />
+
+    <!-- Scroll Reveal Observer -->
+    <script is:inline>
+      (function () {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+        );
+        document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+      })();
+    </script>
+  </body>
+</html>

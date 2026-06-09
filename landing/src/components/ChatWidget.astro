@@ -1,0 +1,10 @@
+---
+// ChatWidget.astro — Injects the chatbot URL and loads the chat widget
+const chatbotUrl = import.meta.env.PUBLIC_CHATBOT_API_URL || 'http://localhost:8000';
+---
+
+<link rel="stylesheet" href="/styles/chat.css" />
+<script define:vars={{ chatbotUrl }}>
+  window.__CHATBOT_API_URL__ = chatbotUrl;
+</script>
+<script is:inline src="/scripts/chat.js"></script>

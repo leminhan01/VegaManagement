@@ -1,20 +1,21 @@
 /**
  * VegiFlow Chat Widget — Client-side JavaScript
- * Giao tiếp với POST /webhooks/web/chat API
+ * Communicates with POST /webhooks/web/chat API
  */
 (function () {
   'use strict';
 
-  const API_BASE = window.location.origin + '/webhooks/web';
-  const SESSION_KEY = 'vegiflow_session_id';
+  // Configurable API base — falls back to localhost:8000
+  var API_BASE = (window.__CHATBOT_API_URL__ || 'http://localhost:8000') + '/webhooks/web';
+  var SESSION_KEY = 'vegiflow_session_id';
 
   // ── State ──────────────────────────────────
-  let sessionId = localStorage.getItem(SESSION_KEY) || null;
-  let isOpen = false;
-  let isLoading = false;
+  var sessionId = localStorage.getItem(SESSION_KEY) || null;
+  var isOpen = false;
+  var isLoading = false;
 
   // ── DOM Elements ───────────────────────────
-  let chatBtn, chatWindow, messagesContainer, inputField, sendBtn, typingEl;
+  var chatBtn, chatWindow, messagesContainer, inputField, sendBtn, typingEl;
 
   function init() {
     // Create floating button
@@ -28,29 +29,28 @@
     // Create chat window
     chatWindow = document.createElement('div');
     chatWindow.className = 'vf-chat-window';
-    chatWindow.innerHTML = `
-      <div class="vf-chat-header">
-        <div class="vf-chat-header-left">
-          <div class="vf-chat-header-avatar">🌿</div>
-          <div class="vf-chat-header-info">
-            <h3>VegiFlow Assistant</h3>
-            <span>Trực tuyến</span>
-          </div>
-        </div>
-        <button class="vf-chat-close" aria-label="Đóng chat">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-      <div class="vf-chat-messages"></div>
-      <div class="vf-chat-input-area">
-        <input class="vf-chat-input" type="text" placeholder="Nhập tin nhắn..." autocomplete="off" />
-        <button class="vf-chat-send" aria-label="Gửi" disabled>
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
-    `;
+    chatWindow.innerHTML =
+      '<div class="vf-chat-header">' +
+        '<div class="vf-chat-header-left">' +
+          '<div class="vf-chat-header-avatar">🌿</div>' +
+          '<div class="vf-chat-header-info">' +
+            '<h3>VegiFlow Assistant</h3>' +
+            '<span>Trực tuyến</span>' +
+          '</div>' +
+        '</div>' +
+        '<button class="vf-chat-close" aria-label="Đóng chat">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">' +
+            '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>' +
+          '</svg>' +
+        '</button>' +
+      '</div>' +
+      '<div class="vf-chat-messages"></div>' +
+      '<div class="vf-chat-input-area">' +
+        '<input class="vf-chat-input" type="text" placeholder="Nhập tin nhắn..." autocomplete="off" />' +
+        '<button class="vf-chat-send" aria-label="Gửi" disabled>' +
+          '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>' +
+        '</button>' +
+      '</div>';
     document.body.appendChild(chatWindow);
 
     // References
@@ -90,10 +90,10 @@
   async function loadSession() {
     if (sessionId) {
       try {
-        const res = await fetch(`${API_BASE}/chat/${sessionId}`);
+        var res = await fetch(API_BASE + '/chat/' + sessionId);
         if (res.ok) {
-          const data = await res.json();
-          data.messages.forEach(msg => {
+          var data = await res.json();
+          data.messages.forEach(function (msg) {
             appendMessage(msg.role, msg.content);
           });
           addNewChatButton();
@@ -113,9 +113,9 @@
     localStorage.removeItem(SESSION_KEY);
 
     try {
-      const res = await fetch(`${API_BASE}/chat/new`, { method: 'POST' });
+      var res = await fetch(API_BASE + '/chat/new', { method: 'POST' });
       if (res.ok) {
-        const data = await res.json();
+        var data = await res.json();
         sessionId = data.session_id;
         localStorage.setItem(SESSION_KEY, sessionId);
         appendMessage('assistant', data.welcome_message);
@@ -129,10 +129,10 @@
   }
 
   function addNewChatButton() {
-    const existing = messagesContainer.querySelector('.vf-new-chat-btn');
+    var existing = messagesContainer.querySelector('.vf-new-chat-btn');
     if (existing) existing.remove();
 
-    const btn = document.createElement('button');
+    var btn = document.createElement('button');
     btn.className = 'vf-new-chat-btn';
     btn.textContent = '🔄 Chat mới';
     btn.addEventListener('click', function () {
@@ -142,15 +142,15 @@
   }
 
   function addSuggestions() {
-    const suggestions = [
+    var suggestions = [
       '🥬 Tư vấn sản phẩm',
       '📍 Địa chỉ cửa hàng',
       '📦 Tra cứu đơn hàng',
     ];
-    const container = document.createElement('div');
+    var container = document.createElement('div');
     container.className = 'vf-suggestions';
-    suggestions.forEach(text => {
-      const btn = document.createElement('button');
+    suggestions.forEach(function (text) {
+      var btn = document.createElement('button');
       btn.className = 'vf-suggestion-btn';
       btn.textContent = text;
       btn.addEventListener('click', function () {
@@ -166,7 +166,7 @@
   // ── Messages ───────────────────────────────
 
   function appendMessage(role, content) {
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.className = 'vf-msg vf-msg-' + (role === 'user' ? 'user' : 'bot');
     div.textContent = content;
     messagesContainer.appendChild(div);
@@ -195,7 +195,7 @@
   // ── Send Message ───────────────────────────
 
   async function sendMessage() {
-    const text = inputField.value.trim();
+    var text = inputField.value.trim();
     if (!text || isLoading) return;
 
     // Clear input
@@ -203,7 +203,7 @@
     sendBtn.disabled = true;
 
     // Remove suggestions
-    const suggestions = messagesContainer.querySelector('.vf-suggestions');
+    var suggestions = messagesContainer.querySelector('.vf-suggestions');
     if (suggestions) suggestions.remove();
 
     // Show user message
@@ -212,7 +212,7 @@
     isLoading = true;
 
     try {
-      const res = await fetch(`${API_BASE}/chat`, {
+      var res = await fetch(API_BASE + '/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -224,7 +224,7 @@
       hideTyping();
 
       if (res.ok) {
-        const data = await res.json();
+        var data = await res.json();
         if (!sessionId && data.session_id) {
           sessionId = data.session_id;
           localStorage.setItem(SESSION_KEY, sessionId);

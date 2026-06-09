@@ -1,0 +1,299 @@
+---
+---
+
+<nav class="nav" role="navigation" aria-label="Menu chính">
+  <div class="container nav-inner">
+    <a href="/" class="nav-brand" aria-label="VegiFlow — Trang chủ">
+      <span class="nav-logo" aria-hidden="true">🌿</span>
+      <span class="nav-name">VegiFlow</span>
+    </a>
+
+    <ul class="nav-links" role="list">
+      <li><a href="#categories" class="nav-link">Danh mục</a></li>
+      <li><a href="#features" class="nav-link">Dịch vụ</a></li>
+      <li><a href="http://localhost:3000/api/docs" target="_blank" rel="noopener" class="nav-link">API Docs</a></li>
+      <li>
+        <button class="nav-chat-btn" id="nav-chat-btn" aria-label="Mở chat tư vấn">
+          Chat ngay
+        </button>
+      </li>
+    </ul>
+
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Mở menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="nav-mobile" id="nav-mobile" aria-hidden="true">
+    <ul class="nav-mobile-links" role="list">
+      <li><a href="#categories" class="nav-mobile-link">Danh mục</a></li>
+      <li><a href="#features" class="nav-mobile-link">Dịch vụ</a></li>
+      <li><a href="http://localhost:3000/api/docs" target="_blank" rel="noopener" class="nav-mobile-link">API Docs</a></li>
+      <li><button class="nav-mobile-chat" id="nav-mobile-chat">Chat ngay</button></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Spacer for fixed nav -->
+<div class="nav-spacer"></div>
+
+<script is:inline>
+  (function () {
+    const hamburger = document.getElementById('nav-hamburger');
+    const mobile = document.getElementById('nav-mobile');
+    const navChatBtn = document.getElementById('nav-chat-btn');
+    const navMobileChat = document.getElementById('nav-mobile-chat');
+
+    function openChat() {
+      const chatBtn = document.querySelector('.vf-chat-btn');
+      if (chatBtn) chatBtn.click();
+    }
+
+    function toggleMenu() {
+      const isOpen = mobile.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+      mobile.setAttribute('aria-hidden', !isOpen);
+    }
+
+    function closeMenu() {
+      mobile.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+      mobile.setAttribute('aria-hidden', 'true');
+    }
+
+    hamburger.addEventListener('click', toggleMenu);
+    navChatBtn.addEventListener('click', openChat);
+    if (navMobileChat) navMobileChat.addEventListener('click', function () { closeMenu(); openChat(); });
+
+    // Close mobile menu on link click
+    mobile.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', closeMenu);
+    });
+
+    // Nav background on scroll
+    var nav = document.querySelector('.nav');
+    window.addEventListener('scroll', function () {
+      if (window.scrollY > 20) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    });
+  })();
+</script>
+
+<style>
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-nav);
+    background: rgba(250, 249, 247, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: background var(--duration-normal) ease,
+                box-shadow var(--duration-normal) ease;
+  }
+
+  .nav.scrolled {
+    background: rgba(250, 249, 247, 0.95);
+    box-shadow: 0 1px 0 var(--color-border-light);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--color-deep);
+    text-decoration: none;
+  }
+
+  .nav-brand:hover {
+    color: var(--color-deep);
+  }
+
+  .nav-logo {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .nav-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xl);
+    list-style: none;
+  }
+
+  .nav-link {
+    position: relative;
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: var(--space-xs) 0;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 1px;
+    transition: width var(--duration-normal) var(--ease-out);
+  }
+
+  .nav-link:hover {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .nav-chat-btn {
+    font-size: var(--text-small);
+    font-weight: 600;
+    color: #fff;
+    background: var(--color-primary);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-full);
+    transition: background var(--duration-fast) ease,
+                transform var(--duration-fast) ease;
+  }
+
+  .nav-chat-btn:hover {
+    background: var(--color-primary-hover);
+    transform: scale(1.03);
+  }
+
+  .nav-chat-btn:active {
+    transform: scale(0.98);
+  }
+
+  /* Hamburger */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: var(--space-sm);
+    cursor: pointer;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-text);
+    border-radius: 2px;
+    transition: transform var(--duration-normal) ease,
+                opacity var(--duration-fast) ease;
+  }
+
+  .nav-hamburger.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-hamburger.open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-hamburger.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* Mobile menu */
+  .nav-mobile {
+    display: none;
+    flex-direction: column;
+    background: rgba(250, 249, 247, 0.98);
+    backdrop-filter: blur(16px);
+    padding: var(--space-lg) var(--container-padding) var(--space-2xl);
+    border-top: 1px solid var(--color-border-light);
+  }
+
+  .nav-mobile.open {
+    display: flex;
+    animation: slideDown var(--duration-normal) var(--ease-out);
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .nav-mobile-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    list-style: none;
+  }
+
+  .nav-mobile-link {
+    font-size: var(--text-body);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    padding: var(--space-sm) 0;
+  }
+
+  .nav-mobile-link:hover {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .nav-mobile-chat {
+    font-size: var(--text-body);
+    font-weight: 600;
+    color: #fff;
+    background: var(--color-primary);
+    padding: var(--space-md) var(--space-xl);
+    border-radius: var(--radius-full);
+    text-align: center;
+    margin-top: var(--space-md);
+    transition: background var(--duration-fast) ease;
+  }
+
+  .nav-mobile-chat:hover {
+    background: var(--color-primary-hover);
+  }
+
+  /* Spacer */
+  .nav-spacer {
+    height: 72px;
+  }
+
+  /* ── Responsive ──────────────────────────── */
+  @media (max-width: 768px) {
+    .nav-links {
+      display: none;
+    }
+
+    .nav-hamburger {
+      display: flex;
+    }
+  }
+</style>

@@ -10,20 +10,24 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #22a65a, #1d8f4e);
   color: #fff;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 20px rgba(34, 166, 90, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 1000;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s ease;
 }
 .vf-chat-btn:hover {
   transform: scale(1.08);
-  box-shadow: 0 6px 24px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 6px 28px rgba(34, 166, 90, 0.45);
+}
+.vf-chat-btn:active {
+  transform: scale(0.96);
 }
 .vf-chat-btn svg {
   width: 28px;
@@ -40,28 +44,29 @@
   max-width: calc(100vw - 32px);
   height: 560px;
   max-height: calc(100vh - 120px);
-  border-radius: 16px;
+  border-radius: 20px;
   background: #fff;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 48px rgba(34, 166, 90, 0.12),
+              0 4px 16px rgba(0, 0, 0, 0.06);
   display: none;
   flex-direction: column;
-  z-index: 10000;
+  z-index: 1001;
   overflow: hidden;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 .vf-chat-window.open {
   display: flex;
-  animation: vfSlideUp 0.25s ease-out;
+  animation: vfSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes vfSlideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ── Header ───────────────────────────────── */
 .vf-chat-header {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #22a65a, #14532d);
   color: #fff;
   padding: 16px 20px;
   display: flex;
@@ -77,8 +82,8 @@
 .vf-chat-header-avatar {
   width: 36px;
   height: 36px;
-  background: rgba(255,255,255,0.25);
-  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,22 +93,23 @@
   margin: 0;
   font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .vf-chat-header-info span {
   font-size: 12px;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 .vf-chat-close {
   background: none;
   border: none;
   color: #fff;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: 8px;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
 }
 .vf-chat-close:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15);
 }
 
 /* ── Messages ─────────────────────────────── */
@@ -114,7 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #f8fafc;
+  background: #faf9f7;
   scroll-behavior: smooth;
 }
 
@@ -123,21 +129,21 @@
   padding: 10px 14px;
   border-radius: 16px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
 .vf-msg-user {
   align-self: flex-end;
-  background: #22c55e;
+  background: #22a65a;
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 .vf-msg-bot {
   align-self: flex-start;
   background: #fff;
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
+  color: #1a1815;
+  border: 1px solid #e5e0d8;
   border-bottom-left-radius: 4px;
 }
 
@@ -149,7 +155,7 @@
   gap: 4px;
   padding: 12px 16px;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e5e0d8;
   border-radius: 16px;
   border-bottom-left-radius: 4px;
 }
@@ -157,7 +163,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #94a3b8;
+  background: #9a938c;
   animation: vfBounce 1.4s infinite both;
 }
 .vf-typing-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -171,7 +177,7 @@
 /* ── Input Area ───────────────────────────── */
 .vf-chat-input-area {
   padding: 12px 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e5e0d8;
   display: flex;
   gap: 8px;
   background: #fff;
@@ -180,39 +186,45 @@
 .vf-chat-input {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e5e0d8;
   border-radius: 24px;
   font-size: 14px;
-  outline: none;
-  transition: border-color 0.15s;
   font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease;
+  color: #1a1815;
 }
 .vf-chat-input:focus {
-  border-color: #22c55e;
+  border-color: #22a65a;
 }
 .vf-chat-input::placeholder {
-  color: #94a3b8;
+  color: #9a938c;
 }
 .vf-chat-send {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #22c55e;
+  background: #22a65a;
   color: #fff;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
   flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 .vf-chat-send:hover {
-  background: #16a34a;
+  background: #1d8f4e;
+  transform: scale(1.05);
+}
+.vf-chat-send:active {
+  transform: scale(0.95);
 }
 .vf-chat-send:disabled {
-  background: #cbd5e1;
+  background: #d4cfc8;
   cursor: not-allowed;
+  transform: none;
 }
 .vf-chat-send svg {
   width: 18px;
@@ -224,17 +236,18 @@
 .vf-new-chat-btn {
   align-self: center;
   padding: 6px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e5e0d8;
   border-radius: 20px;
   background: #fff;
-  color: #64748b;
+  color: #6b6560;
   font-size: 12px;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
 }
 .vf-new-chat-btn:hover {
-  border-color: #22c55e;
-  color: #22c55e;
+  border-color: #22a65a;
+  color: #22a65a;
 }
 
 /* ── Scrollbar ────────────────────────────── */
@@ -245,7 +258,7 @@
   background: transparent;
 }
 .vf-chat-messages::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d4cfc8;
   border-radius: 2px;
 }
 
@@ -258,16 +271,17 @@
 }
 .vf-suggestion-btn {
   padding: 6px 12px;
-  border: 1px solid #22c55e;
+  border: 1px solid #22a65a;
   border-radius: 16px;
   background: #fff;
-  color: #16a34a;
+  color: #1d8f4e;
   font-size: 12px;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 .vf-suggestion-btn:hover {
-  background: #f0fdf4;
+  background: rgba(34, 166, 90, 0.06);
 }
 
 /* ── Mobile Responsive ────────────────────── */
