@@ -1,9 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector(map: "vector")]
 }
 
 // ── Enums ──────────────────────────────────────────────────
@@ -29,6 +31,7 @@ enum PaymentMethod {
 enum ChatPlatform {
   ZALO
   MESSENGER
+  WEB
 }
 
 enum MessageRole {
@@ -132,6 +135,7 @@ model Product {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   orderItems          OrderItem[]
+  embedding           ProductEmbedding?
   stockMovements      StockMovement[]
   warehouseStocks     WarehouseStock[]
   stockAuditItems     StockAuditItem[]
@@ -318,6 +322,27 @@ model InventoryActionLog {
 
   @@index([action])
   @@index([createdAt])
+}
+
+// ── Product Embedding (pgvector) ────────────────────────────
+
+model ProductEmbedding {
+  id            String              @id @default(uuid())
+  productId     String              @unique
+  product       Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  embedding     Unsupported("vector(1536)")
+  embeddingText String?             // Nội dung text gốc đã tạo embedding (debug)
+  updatedAt     DateTime            @updatedAt
+}
+
+// ── Store Config ────────────────────────────────────────────
+
+model StoreConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique // "address", "phone", "open_hours", etc.
+  value     String            // Giá trị (string hoặc JSON string)
+  label     String?           // Tên hiển thị: "Địa chỉ cửa hàng"
+  updatedAt DateTime @updatedAt
 }
 
 // ── Customer ───────────────────────────────────────────────

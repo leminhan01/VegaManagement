@@ -43,6 +43,20 @@ class SuggestProductsInput(BaseModel):
     preferences: str = Field(description="Sở thích, nhu cầu hoặc tình trạng sức khỏe để gợi ý sản phẩm phù hợp")
 
 
+class SemanticSearchInput(BaseModel):
+    """Tìm kiếm sản phẩm thông minh bằng AI semantic search."""
+    query: str = Field(description="Câu hỏi hoặc mô tả nhu cầu của khách hàng")
+    top_k: int = Field(default=5, description="Số lượng kết quả trả về")
+
+
+class GetStoreInfoInput(BaseModel):
+    """Lấy thông tin cửa hàng."""
+    key: Optional[str] = Field(
+        default=None,
+        description="Key cụ thể (address, phone, open_hours...) hoặc bỏ trống để lấy tất cả",
+    )
+
+
 # ── Tool Definitions ──
 
 TOOLS = [
@@ -50,8 +64,22 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "search_products",
-            "description": "Tìm kiếm sản phẩm thực phẩm chay trong cửa hàng. Dùng khi khách hỏi về sản phẩm, muốn xem menu, hoặc tìm sản phẩm theo loại.",
+            "description": "Tìm kiếm sản phẩm thực phẩm chay theo từ khóa. Dùng khi khách tìm sản phẩm theo tên cụ thể hoặc mã sản phẩm.",
             "parameters": SearchProductsInput.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "semantic_search_products",
+            "description": (
+                "Tìm kiếm sản phẩm thông minh bằng AI hiểu ngữ nghĩa. "
+                "Ưu tiên dùng tool này khi khách hỏi về sản phẩm theo nhu cầu/sở thích. "
+                "Ví dụ: 'món nào nhiều protein', 'đồ ăn vặt chay', 'sản phẩm organic', "
+                "'gợi ý món cho người mới ăn chay', 'thực phẩm giảm cân'. "
+                "Trả về top 5 sản phẩm phù hợp nhất dựa trên AI semantic search."
+            ),
+            "parameters": SemanticSearchInput.model_json_schema(),
         },
     },
     {
@@ -100,6 +128,18 @@ TOOLS = [
             "name": "suggest_products",
             "description": "Gợi ý sản phẩm phù hợp dựa trên sở thích, nhu cầu, hoặc tình trạng sức khỏe của khách hàng. Dùng khi khách cần tư vấn chọn sản phẩm.",
             "parameters": SuggestProductsInput.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_store_info",
+            "description": (
+                "Lấy thông tin cửa hàng: địa chỉ, số điện thoại, giờ mở cửa, email, fanpage, "
+                "chính sách giao hàng, chính sách đổi trả. "
+                "Dùng khi khách hỏi thông tin liên hệ, địa chỉ, hoặc về cửa hàng."
+            ),
+            "parameters": GetStoreInfoInput.model_json_schema(),
         },
     },
 ]

@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from ..clients.backend_api import backend_api
+from ..embeddings.service import embedding_service
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,16 @@ async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
                 tags=arguments.get("tags", ""),
             )
             return _format_result(result)
+
+        elif name == "semantic_search_products":
+            # RAG search: dùng embedding service trực tiếp (không qua NestJS)
+            query = arguments.get("query", "")
+            top_k = arguments.get("top_k", 5)
+            results = await embedding_service.semantic_search(
+                query=query,
+                top_k=top_k,
+            )
+            return json.dumps({"data": results, "total": len(results)}, ensure_ascii=False)
 
         elif name == "get_product_detail":
             product_id = arguments.get("product_id", "")
@@ -55,6 +66,14 @@ async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
         elif name == "suggest_products":
             prefs = arguments.get("preferences", "")
             result = await backend_api.suggest_products(prefs=prefs)
+            return _format_result(result)
+
+        elif name == "get_store_info":
+            key = arguments.get("key")
+            if key:
+                result = await backend_api.get_store_config_by_key(key)
+            else:
+                result = await backend_api.get_store_config()
             return _format_result(result)
 
         else:

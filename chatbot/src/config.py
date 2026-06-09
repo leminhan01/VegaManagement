@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_MODEL_ADVANCED: str = "gpt-4o"
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+
+    # Database (direct connection for pgvector)
+    DATABASE_URL: str = "postgresql://user:password@localhost:5444/veg_shop"
 
     # NestJS Backend (internal API)
     BACKEND_API_URL: str = "http://localhost:3000/api/bot"

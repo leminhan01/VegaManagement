@@ -5,5 +5,6 @@ import { BotApiService } from './bot-api.service';
 @Module({
   controllers: [BotApiController],
   providers: [BotApiService],
+  exports: [BotApiService],
 })
 export class BotApiModule {}

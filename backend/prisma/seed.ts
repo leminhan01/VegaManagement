@@ -18,6 +18,7 @@ async function main() {
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
   await prisma.customer.deleteMany();
+  await prisma.storeConfig.deleteMany();
   await prisma.category.deleteMany();
   await prisma.admin.deleteMany();
 
@@ -32,6 +33,30 @@ async function main() {
     },
   });
   console.log(`✅ Admin created: ${admin.username}`);
+
+  // ── Store Config ──
+  const storeConfigs = [
+    { key: 'store_name', value: 'VegiFlow', label: 'Tên cửa hàng' },
+    { key: 'address', value: '123 Nguyễn Huệ, Quận 1, TP.HCM', label: 'Địa chỉ' },
+    { key: 'phone', value: '0900 123 456', label: 'Số điện thoại' },
+    { key: 'hotline', value: '1800 6868', label: 'Hotline' },
+    { key: 'email', value: 'hello@vegiflow.vn', label: 'Email' },
+    { key: 'open_hours', value: 'Thứ 2 - Thứ 7: 8:00 - 21:00\nChủ nhật: 9:00 - 18:00', label: 'Giờ mở cửa' },
+    { key: 'fanpage', value: 'https://facebook.com/vegiflow', label: 'Fanpage Facebook' },
+    { key: 'zalo_oa', value: 'https://zalo.me/vegiflow', label: 'Zalo OA' },
+    { key: 'website', value: 'https://vegiflow.vn', label: 'Website' },
+    { key: 'return_policy', value: 'Đổi trả trong vòng 7 ngày nếu sản phẩm còn nguyên hộp, chưa sử dụng. Liên hệ hotline 1800 6868 để được hỗ trợ.', label: 'Chính sách đổi trả' },
+    { key: 'shipping_policy', value: 'Giao hàng nội thành TP.HCM trong 2-4 giờ. Các tỉnh thành khác 2-5 ngày. Freeship đơn từ 300.000đ.', label: 'Chính sách giao hàng' },
+  ];
+
+  for (const config of storeConfigs) {
+    await prisma.storeConfig.upsert({
+      where: { key: config.key },
+      update: {},
+      create: config,
+    });
+  }
+  console.log(`✅ ${storeConfigs.length} store configs created`);
 
   // ── Categories ──
   const categories = await Promise.all([

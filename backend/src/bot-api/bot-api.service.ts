@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   getPaginationParams,
@@ -8,13 +9,23 @@ import {
 import {
   SearchProductsDto,
   SuggestProductsDto,
+  SemanticSearchDto,
   UpsertSessionDto,
   CreateMessageDto,
 } from './dto/search-products.dto';
 
 @Injectable()
 export class BotApiService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(BotApiService.name);
+  private readonly chatbotUrl: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {
+    // Chatbot service URL for embedding calls
+    this.chatbotUrl = this.configService.get<string>('CHATBOT_SERVICE_URL', 'http://localhost:8000');
+  }
 
   // ── Products ──────────────────────────────────────────────
 
@@ -133,6 +144,61 @@ export class BotApiService {
       description: cat.description,
       productCount: cat._count.products,
     }));
+  }
+
+  // ── Semantic Search (gọi sang Chatbot/FastAPI embedding service) ──
+
+  async semanticSearch(query: SemanticSearchDto) {
+    // Gọi sang FastAPI embedding service để tìm kiếm semantic
+    try {
+      const response = await fetch(
+        `${this.chatbotUrl}/embeddings/search`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: query.q,
+            top_k: query.top_k ?? 5,
+            min_similarity: query.min_similarity ?? 0.3,
+          }),
+          signal: AbortSignal.timeout(30000),
+        },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      this.logger.error(`Lỗi semantic search: ${error.message}`);
+      // Fallback: trả về mảng rỗng thay vì crash
+      return { data: [], total: 0, error: 'Semantic search hiện không khả dụng' };
+    }
+  }
+
+  // ── Store Config ──────────────────────────────────────────
+
+  async getStoreConfig() {
+    const configs = await this.prisma.storeConfig.findMany({
+      orderBy: { key: 'asc' },
+    });
+    // Trả về dạng key-value object cho bot dễ dùng
+    const result: Record<string, string> = {};
+    for (const config of configs) {
+      result[config.key] = config.value;
+    }
+    return result;
+  }
+
+  async getStoreConfigByKey(key: string) {
+    const config = await this.prisma.storeConfig.findUnique({
+      where: { key },
+    });
+
+    if (!config) {
+      throw new NotFoundException(`Không tìm thấy config với key "${key}"`);
+    }
+
+    return config;
   }
 
   // ── Orders ────────────────────────────────────────────────

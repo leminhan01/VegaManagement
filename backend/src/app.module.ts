@@ -11,6 +11,7 @@ import { ChatSessionsModule } from './chat-sessions/chat-sessions.module';
 import { BotApiModule } from './bot-api/bot-api.module';
 import { StatsModule } from './stats/stats.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { StoreConfigModule } from './store-config/store-config.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
@@ -29,6 +30,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     BotApiModule,
     StatsModule,
     InventoryModule,
+    StoreConfigModule,
   ],
   providers: [
     // Global JWT guard — all routes require auth unless marked @Public()

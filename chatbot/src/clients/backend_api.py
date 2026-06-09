@@ -115,6 +115,22 @@ class BackendApiClient:
         result = res.json()
         return result.get("data", {}).get("messages", [])
 
+    # ── Store Config ──
+
+    async def get_store_config(self) -> dict[str, Any]:
+        """GET /bot/store-config — get all store config as key-value."""
+        client = await self._get_client()
+        res = await client.get("/store-config")
+        res.raise_for_status()
+        return res.json()
+
+    async def get_store_config_by_key(self, key: str) -> dict[str, Any]:
+        """GET /bot/store-config/:key — get single config."""
+        client = await self._get_client()
+        res = await client.get(f"/store-config/{key}")
+        res.raise_for_status()
+        return res.json()
+
 
 # Singleton instance
 backend_api = BackendApiClient()

@@ -1,4 +1,5 @@
-import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsNumber, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ChatPlatform } from '@prisma/client';
 
 export class SearchProductsDto {
@@ -31,6 +32,25 @@ export class SuggestProductsDto {
 
   @IsOptional()
   limit?: string;
+}
+
+export class SemanticSearchDto {
+  @IsString()
+  q!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(20)
+  top_k?: number = 5;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  min_similarity?: number = 0.3;
 }
 
 export class UpsertSessionDto {

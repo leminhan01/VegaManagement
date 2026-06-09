@@ -14,6 +14,7 @@ import { Public } from '../common/decorators/public.decorator';
 import {
   SearchProductsDto,
   SuggestProductsDto,
+  SemanticSearchDto,
   UpsertSessionDto,
   CreateMessageDto,
 } from './dto/search-products.dto';
@@ -30,6 +31,11 @@ export class BotApiController {
   @Get('products')
   searchProducts(@Query() query: SearchProductsDto) {
     return this.botApiService.searchProducts(query);
+  }
+
+  @Get('products/semantic-search')
+  semanticSearchProducts(@Query() query: SemanticSearchDto) {
+    return this.botApiService.semanticSearch(query);
   }
 
   @Get('products/suggest')
@@ -52,6 +58,18 @@ export class BotApiController {
   @Get('categories')
   getCategories() {
     return this.botApiService.getCategories();
+  }
+
+  // ── Store Config ──────────────────────────────────────────
+
+  @Get('store-config')
+  getStoreConfig() {
+    return this.botApiService.getStoreConfig();
+  }
+
+  @Get('store-config/:key')
+  getStoreConfigByKey(@Param('key') key: string) {
+    return this.botApiService.getStoreConfigByKey(key);
   }
 
   // ── Orders ────────────────────────────────────────────────
