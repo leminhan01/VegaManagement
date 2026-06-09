@@ -9,6 +9,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 import { CreateStockAuditDto } from './dto/create-stock-audit.dto';
 import { CreateStockTransferDto } from './dto/create-stock-transfer.dto';
@@ -30,6 +31,7 @@ import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { InventoryService } from './inventory.service';
 
 @Controller('inventory')
+@ApiBearerAuth('access_token')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 

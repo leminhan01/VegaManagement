@@ -8,12 +8,14 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { FilterCategoriesDto } from './dto/filter-categories.dto';
 
 @Controller('categories')
+@ApiBearerAuth('access_token')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 

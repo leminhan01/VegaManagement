@@ -8,12 +8,14 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { FilterCustomersDto } from './dto/filter-customers.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @Controller('customers')
+@ApiBearerAuth('access_token')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 

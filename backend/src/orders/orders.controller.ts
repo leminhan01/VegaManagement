@@ -9,6 +9,7 @@ import {
   Query,
   Body,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -16,6 +17,7 @@ import { FilterOrdersDto } from './dto/filter-orders.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Controller('orders')
+@ApiBearerAuth('access_token')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 

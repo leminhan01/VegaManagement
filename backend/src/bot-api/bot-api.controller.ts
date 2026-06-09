@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
+import { ApiSecurity } from '@nestjs/swagger';
 import { BotApiGuard } from './bot-api.guard';
 import { BotApiService } from './bot-api.service';
 import { Public } from '../common/decorators/public.decorator';
@@ -20,6 +21,7 @@ import {
 @Public()
 @UseGuards(BotApiGuard)
 @Controller('bot')
+@ApiSecurity('BOT_API_KEY')
 export class BotApiController {
   constructor(private readonly botApiService: BotApiService) {}
 

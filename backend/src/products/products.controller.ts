@@ -15,6 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { createHash } from 'crypto';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -38,6 +39,7 @@ type CloudinaryUploadResponse = {
 };
 
 @Controller('products')
+@ApiBearerAuth('access_token')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
