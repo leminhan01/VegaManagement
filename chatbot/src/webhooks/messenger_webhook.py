@@ -6,6 +6,7 @@ from fastapi import APIRouter, Query, Request, Response
 
 from ..config import settings
 from ..chatbot.agent import ChatbotAgent
+from ..chatbot.markdown_utils import strip_markdown_for_sms
 from ..clients.messenger_client import messenger_client
 
 logger = logging.getLogger(__name__)
@@ -66,14 +67,16 @@ async def handle_messenger_webhook(request: Request):
                     logger.info(f"Messenger message from {sender_id}: {message_text[:100]}")
 
                     # Process with AI agent
-                    response = await agent.process_message(
+                    result = await agent.process_message(
                         platform="MESSENGER",
                         platform_user_id=sender_id,
                         user_message=message_text,
                     )
 
-                    # Send response back via Messenger
-                    await messenger_client.send_text(sender_id, response)
+                    # Send response back via Messenger (không render markdown → strip)
+                    await messenger_client.send_text(
+                        sender_id, strip_markdown_for_sms(result["text"])
+                    )
 
                 # Handle postbacks (Get Started button, etc.)
                 elif messaging_event.get("postback"):

@@ -7,4 +7,6 @@ const chatbotUrl = import.meta.env.PUBLIC_CHATBOT_API_URL || 'http://localhost:8
 <script define:vars={{ chatbotUrl }}>
   window.__CHATBOT_API_URL__ = chatbotUrl;
 </script>
+<script is:inline src="/scripts/lib/marked.min.js"></script>
+<script is:inline src="/scripts/lib/purify.min.js"></script>
 <script is:inline src="/scripts/chat.js"></script>

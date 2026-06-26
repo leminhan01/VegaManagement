@@ -168,9 +168,103 @@
   function appendMessage(role, content) {
     var div = document.createElement('div');
     div.className = 'vf-msg vf-msg-' + (role === 'user' ? 'user' : 'bot');
-    div.textContent = content;
+    if (role === 'user') {
+      // Tin nhắn user: LUÔN textContent (chống XSS)
+      div.textContent = content;
+    } else {
+      // Tin nhắn bot: render markdown → sanitize → innerHTML
+      div.classList.add('vf-msg-md');
+      div.innerHTML = renderBotContent(content);
+      attachImageLightbox(div);
+    }
     messagesContainer.appendChild(div);
     scrollToBottom();
+  }
+
+  // Parse markdown của bot thành HTML đã sanitize (chống XSS từ LLM/prompt-injection)
+  function renderBotContent(md) {
+    if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+      // Fallback an toàn nếu thư viện chưa tải xong
+      var el = document.createElement('div');
+      el.textContent = md == null ? '' : String(md);
+      return el.innerHTML.replace(/\n/g, '<br>');
+    }
+    marked.setOptions({ breaks: true, gfm: true });
+    var raw = marked.parse(String(md == null ? '' : md));
+    return DOMPurify.sanitize(raw, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'ul', 'ol', 'li', 'code', 'img', 'a', 'span', 'div'],
+      ALLOWED_ATTR: ['src', 'alt', 'href', 'title', 'class'],
+      ALLOW_DATA_ATTR: false,
+    });
+  }
+
+  // Click ảnh inline của bot → mở lightbox full-screen
+  function attachImageLightbox(container) {
+    var imgs = container.querySelectorAll('img');
+    Array.prototype.forEach.call(imgs, function (img) {
+      img.addEventListener('click', function () {
+        var lb = document.createElement('div');
+        lb.className = 'vf-lightbox';
+        var big = document.createElement('img');
+        big.src = img.src;
+        lb.appendChild(big);
+        lb.addEventListener('click', function () { lb.remove(); });
+        document.body.appendChild(lb);
+      });
+    });
+  }
+
+  // Định dạng giá VNĐ (có gạch giá cũ nếu đang sale)
+  function formatPrice(price, salePrice) {
+    var final = salePrice != null ? salePrice : price;
+    if (final == null || isNaN(final)) return '';
+    var finalStr = Number(final).toLocaleString('vi-VN') + 'đ';
+    if (salePrice != null && price != null && Number(salePrice) < Number(price)) {
+      return '<span class="vf-pc-sale">' + finalStr + '</span>' +
+        '<span class="vf-pc-old">' + Number(price).toLocaleString('vi-VN') + 'đ</span>';
+    }
+    return finalStr;
+  }
+
+  // Render gallery Product Cards (ảnh + tên + giá + nút "Xem chi tiết")
+  function appendProductCards(products) {
+    if (!products || !products.length) return;
+    var gallery = document.createElement('div');
+    gallery.className = 'vf-product-gallery';
+    products.forEach(function (p) {
+      var card = document.createElement('div');
+      card.className = 'vf-product-card';
+      var name = escapeHtml(p.name || '');
+      var desc = escapeHtml(p.short_desc || p.shortDesc || '');
+      var priceHtml = formatPrice(p.price, p.sale_price != null ? p.sale_price : p.salePrice);
+      var imgHtml = p.image
+        ? '<img class="vf-pc-img" src="' + escapeAttr(p.image) + '" alt="' + name + '" loading="lazy">'
+        : '<div class="vf-pc-img vf-pc-noimg">🌿</div>';
+      var btnHtml = p.slug
+        ? '<a class="vf-pc-btn" href="/san-pham/' + escapeAttr(p.slug) + '" target="_blank" rel="noopener">Xem chi tiết</a>'
+        : '';
+      card.innerHTML = DOMPurify.sanitize(
+        imgHtml +
+        '<div class="vf-pc-body">' +
+          '<div class="vf-pc-name">' + name + '</div>' +
+          (priceHtml ? '<div class="vf-pc-price">' + priceHtml + '</div>' : '') +
+          (desc ? '<div class="vf-pc-desc">' + desc + '</div>' : '') +
+        '</div>' +
+        btnHtml
+      );
+      gallery.appendChild(card);
+    });
+    messagesContainer.appendChild(gallery);
+    scrollToBottom();
+  }
+
+  function escapeHtml(s) {
+    var el = document.createElement('div');
+    el.textContent = s == null ? '' : String(s);
+    return el.innerHTML;
+  }
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/"/g, '&quot;');
   }
 
   function showTyping() {
@@ -230,6 +324,9 @@
           localStorage.setItem(SESSION_KEY, sessionId);
         }
         appendMessage('assistant', data.reply);
+        if (data.products && data.products.length) {
+          appendProductCards(data.products);
+        }
       } else {
         appendMessage('assistant', 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau nhé! 🙏');
       }

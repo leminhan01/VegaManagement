@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query, Request
 
 from ..config import settings
 from ..chatbot.agent import ChatbotAgent
+from ..chatbot.markdown_utils import strip_markdown_for_sms
 from ..clients.zalo_client import zalo_client
 
 logger = logging.getLogger(__name__)
@@ -57,14 +58,14 @@ async def handle_zalo_webhook(request: Request):
             logger.info(f"Zalo message from {user_id}: {message_text[:100]}")
 
             # Xử lý bằng AI agent
-            response = await agent.process_message(
+            result = await agent.process_message(
                 platform="ZALO",
                 platform_user_id=user_id,
                 user_message=message_text,
             )
 
-            # Gửi phản hồi qua Zalo
-            await zalo_client.send_text(user_id, response)
+            # Gửi phản hồi qua Zalo (Zalo không render markdown → strip về plain text)
+            await zalo_client.send_text(user_id, strip_markdown_for_sms(result["text"]))
             return {"status": "ok"}
 
         # Người dùng gửi hình ảnh

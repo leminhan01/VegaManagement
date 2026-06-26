@@ -41,9 +41,23 @@ class WebChatRequest(BaseModel):
     )
 
 
+class ProductCard(BaseModel):
+    """Sản phẩm để render thành Product Card trên web client."""
+    id: str
+    name: Optional[str] = None
+    price: Optional[float] = None
+    sale_price: Optional[float] = Field(default=None, alias="salePrice")
+    image: Optional[str] = None
+    slug: Optional[str] = None
+    short_desc: Optional[str] = Field(default=None, alias="shortDesc")
+
+    model_config = {"populate_by_name": True}
+
+
 class WebChatResponse(BaseModel):
     """Response from chatbot."""
     reply: str
+    products: list[ProductCard] = Field(default_factory=list)
     session_id: str
     timestamp: str
     intent: Optional[str] = None
@@ -159,16 +173,17 @@ async def handle_web_chat(request: WebChatRequest):
         session_id = session["id"]
 
     # 2. Process message with AI agent
-    response_text = await agent.process_message(
+    result = await agent.process_message(
         platform="WEB",
         platform_user_id=platform_user_id,
         user_message=request.content,
         customer_id=request.customer_id,
     )
 
-    # 3. Return response
+    # 3. Return response (text chứa markdown + products để render Product Card)
     return WebChatResponse(
-        reply=response_text,
+        reply=result["text"],
+        products=[ProductCard(**p) for p in result.get("products", [])],
         session_id=session_id,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )

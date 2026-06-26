@@ -147,6 +147,35 @@
   border-bottom-left-radius: 4px;
 }
 
+/* ── Markdown rendering trong tin nhắn bot ── */
+.vf-msg-md {
+  /* override white-space: pre-wrap của .vf-msg — marked đã tự tạo <br>/<p> */
+  white-space: normal;
+}
+.vf-msg-md p { margin: 0 0 6px; }
+.vf-msg-md p:last-child { margin-bottom: 0; }
+.vf-msg-md strong, .vf-msg-md b { font-weight: 600; }
+.vf-msg-md em, .vf-msg-md i { font-style: italic; }
+.vf-msg-md ul, .vf-msg-md ol { margin: 4px 0 6px; padding-left: 18px; }
+.vf-msg-md li { margin: 2px 0; }
+.vf-msg-md code {
+  background: #f3efe8;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+}
+.vf-msg-md a { color: #1d8f4e; text-decoration: underline; word-break: break-word; }
+.vf-msg-md img {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 10px;
+  margin: 6px 0;
+  cursor: zoom-in;
+  display: block;
+  object-fit: cover;
+}
+
 /* ── Typing Indicator ─────────────────────── */
 .vf-typing {
   align-self: flex-start;
@@ -282,6 +311,126 @@
 }
 .vf-suggestion-btn:hover {
   background: rgba(34, 166, 90, 0.06);
+}
+
+/* ── Lightbox (phóng to ảnh bot) ─────────── */
+.vf-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  cursor: zoom-out;
+  padding: 16px;
+  animation: vfFade 0.2s ease;
+}
+.vf-lightbox img {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 10px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+}
+@keyframes vfFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Product Cards ────────────────────────── */
+.vf-product-gallery {
+  align-self: flex-start;
+  max-width: 88%;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.vf-product-gallery::-webkit-scrollbar { height: 4px; }
+.vf-product-gallery::-webkit-scrollbar-thumb { background: #d4cfc8; border-radius: 2px; }
+.vf-product-card {
+  flex: 0 0 148px;
+  background: #fff;
+  border: 1px solid #e5e0d8;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.vf-product-card:hover {
+  box-shadow: 0 4px 16px rgba(34, 166, 90, 0.12);
+  transform: translateY(-2px);
+}
+.vf-pc-img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  background: #f3efe8;
+}
+.vf-pc-noimg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #9a938c;
+}
+.vf-pc-body {
+  padding: 8px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vf-pc-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #1a1815;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.vf-pc-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: #22a65a;
+  display: flex;
+  gap: 5px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.vf-pc-old {
+  font-size: 11px;
+  color: #9a938c;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+.vf-pc-desc {
+  font-size: 11px;
+  color: #6b6560;
+  line-height: 1.35;
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.vf-pc-btn {
+  display: block;
+  text-align: center;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #22a65a;
+  color: #fff;
+  text-decoration: none;
+}
+.vf-pc-btn:hover {
+  background: #1d8f4e;
 }
 
 /* ── Mobile Responsive ────────────────────── */
