@@ -30,7 +30,6 @@ async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
             return _format_result(result)
 
         elif name == "semantic_search_products":
-            # RAG search: dùng embedding service trực tiếp (không qua NestJS)
             query = arguments.get("query", "")
             top_k = arguments.get("top_k", 5)
             results = await embedding_service.semantic_search(
@@ -73,7 +72,7 @@ async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
             if key:
                 result = await backend_api.get_store_config_by_key(key)
             else:
-                result = await backend_api.get_store_config()
+                result = await backend_api.get_full_store_info()
             return _format_result(result)
 
         else:
@@ -89,7 +88,6 @@ async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
 
 def _format_result(result: dict[str, Any]) -> str:
     """Format API result for OpenAI consumption."""
-    # Extract data from paginated response envelope
     if "data" in result and "meta" in result:
         return json.dumps(result, ensure_ascii=False)
     return json.dumps(result, ensure_ascii=False)

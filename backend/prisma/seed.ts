@@ -18,6 +18,7 @@ async function main() {
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
   await prisma.customer.deleteMany();
+  await prisma.storeBranch.deleteMany();
   await prisma.storeConfig.deleteMany();
   await prisma.category.deleteMany();
   await prisma.admin.deleteMany();
@@ -37,16 +38,20 @@ async function main() {
   // ── Store Config ──
   const storeConfigs = [
     { key: 'store_name', value: 'VegiFlow', label: 'Tên cửa hàng' },
-    { key: 'address', value: '123 Nguyễn Huệ, Quận 1, TP.HCM', label: 'Địa chỉ' },
+    { key: 'store_description', value: 'VegiFlow - Cửa hàng thực phẩm chay online hàng đầu Việt Nam. Cung cấp thực phẩm tươi, khô, đông lạnh, đồ uống và thực phẩm bổ sung 100% thực vật.', label: 'Giới thiệu cửa hàng' },
+    { key: 'address', value: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM', label: 'Địa chỉ' },
     { key: 'phone', value: '0900 123 456', label: 'Số điện thoại' },
     { key: 'hotline', value: '1800 6868', label: 'Hotline' },
     { key: 'email', value: 'hello@vegiflow.vn', label: 'Email' },
-    { key: 'open_hours', value: 'Thứ 2 - Thứ 7: 8:00 - 21:00\nChủ nhật: 9:00 - 18:00', label: 'Giờ mở cửa' },
+    { key: 'logo', value: 'https://vegiflow.vn/logo.png', label: 'Logo URL' },
+    { key: 'open_hours', value: JSON.stringify({ mon: '8:00-21:00', tue: '8:00-21:00', wed: '8:00-21:00', thu: '8:00-21:00', fri: '8:00-21:00', sat: '8:00-21:00', sun: '9:00-18:00' }), label: 'Giờ mở cửa' },
     { key: 'fanpage', value: 'https://facebook.com/vegiflow', label: 'Fanpage Facebook' },
     { key: 'zalo_oa', value: 'https://zalo.me/vegiflow', label: 'Zalo OA' },
+    { key: 'tiktok', value: 'https://tiktok.com/@vegiflow', label: 'TikTok' },
     { key: 'website', value: 'https://vegiflow.vn', label: 'Website' },
     { key: 'return_policy', value: 'Đổi trả trong vòng 7 ngày nếu sản phẩm còn nguyên hộp, chưa sử dụng. Liên hệ hotline 1800 6868 để được hỗ trợ.', label: 'Chính sách đổi trả' },
     { key: 'shipping_policy', value: 'Giao hàng nội thành TP.HCM trong 2-4 giờ. Các tỉnh thành khác 2-5 ngày. Freeship đơn từ 300.000đ.', label: 'Chính sách giao hàng' },
+    { key: 'warranty_policy', value: 'Bảo đảm chất lượng sản phẩm trong 30 ngày. Nếu sản phẩm bị lỗi do nhà sản xuất, VegiFlow sẽ đổi mới hoặc hoàn tiền 100%.', label: 'Chính sách bảo hành' },
   ];
 
   for (const config of storeConfigs) {
@@ -57,6 +62,34 @@ async function main() {
     });
   }
   console.log(`✅ ${storeConfigs.length} store configs created`);
+
+  // ── Store Branches ──
+  const branches = [
+    {
+      name: 'VegiFlow Quận 1 (Trụ sở chính)',
+      address: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM',
+      phone: '0900 123 456',
+      openHours: { mon: '8:00-21:00', tue: '8:00-21:00', wed: '8:00-21:00', thu: '8:00-21:00', fri: '8:00-21:00', sat: '8:00-21:00', sun: '9:00-18:00' },
+      latitude: 10.772315,
+      longitude: 106.704175,
+      isActive: true,
+      sortOrder: 0,
+    },
+    {
+      name: 'VegiFlow Thủ Đức',
+      address: '456 Võ Văn Ngân, Phường Bình Thọ, TP. Thủ Đức',
+      phone: '0900 789 012',
+      openHours: { mon: '8:00-20:00', tue: '8:00-20:00', wed: '8:00-20:00', thu: '8:00-20:00', fri: '8:00-20:00', sat: '8:00-21:00', sun: '9:00-17:00' },
+      latitude: 10.853053,
+      longitude: 106.755489,
+      isActive: true,
+      sortOrder: 1,
+    },
+  ];
+  for (const branch of branches) {
+    await prisma.storeBranch.create({ data: branch });
+  }
+  console.log(`✅ ${branches.length} store branches created`);
 
   // ── Categories ──
   const categories = await Promise.all([

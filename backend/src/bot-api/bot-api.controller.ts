@@ -62,6 +62,11 @@ export class BotApiController {
 
   // ── Store Config ──────────────────────────────────────────
 
+  @Get('store-info')
+  getFullStoreInfo() {
+    return this.botApiService.getFullStoreInfo();
+  }
+
   @Get('store-config')
   getStoreConfig() {
     return this.botApiService.getStoreConfig();
@@ -87,6 +92,11 @@ export class BotApiController {
   }
 
   // ── Chat Sessions (Bot) ───────────────────────────────────
+
+  @Get('chat-sessions/:id')
+  getSession(@Param('id') id: string) {
+    return this.botApiService.getSession(id);
+  }
 
   @Post('chat-sessions')
   upsertSession(@Body() dto: UpsertSessionDto) {

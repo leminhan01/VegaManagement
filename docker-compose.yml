@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   postgres:
-    image: pgvector/pgvector:pg16-alpine
+    image: pgvector/pgvector:pg16
     container_name: vegiflow-postgres
     environment:
       POSTGRES_DB: veg_shop

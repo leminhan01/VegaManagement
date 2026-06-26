@@ -53,7 +53,7 @@ class GetStoreInfoInput(BaseModel):
     """Lấy thông tin cửa hàng."""
     key: Optional[str] = Field(
         default=None,
-        description="Key cụ thể (address, phone, open_hours...) hoặc bỏ trống để lấy tất cả",
+        description="Key cụ thể (address, phone, open_hours, return_policy, shipping_policy, warranty_policy...) hoặc bỏ trống để lấy tất cả thông tin gồm chi nhánh và mạng xã hội",
     )
 
 
@@ -136,8 +136,8 @@ TOOLS = [
             "name": "get_store_info",
             "description": (
                 "Lấy thông tin cửa hàng: địa chỉ, số điện thoại, giờ mở cửa, email, fanpage, "
-                "chính sách giao hàng, chính sách đổi trả. "
-                "Dùng khi khách hỏi thông tin liên hệ, địa chỉ, hoặc về cửa hàng."
+                "chính sách giao hàng/đổi trả/bảo hành, chi nhánh, mạng xã hội (Zalo, Facebook, TikTok). "
+                "Dùng khi khách hỏi thông tin liên hệ, địa chỉ, chi nhánh gần nhất, hoặc về cửa hàng."
             ),
             "parameters": GetStoreInfoInput.model_json_schema(),
         },

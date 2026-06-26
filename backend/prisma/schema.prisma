@@ -345,6 +345,23 @@ model StoreConfig {
   updatedAt DateTime @updatedAt
 }
 
+// ── Store Branch (chi nhánh) ───────────────────────────────
+
+model StoreBranch {
+  id         String   @id @default(uuid())
+  name       String                    // "VegiFlow Quận 1"
+  address    String                    // Địa chỉ đầy đủ
+  phone      String?                   // SĐT riêng của chi nhánh
+  email      String?                   // Email riêng
+  openHours  Json?                     // {"mon": "8:00-21:00", ..., "sun": "9:00-18:00"}
+  latitude   Float?
+  longitude  Float?
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)      // Thứ tự hiển thị
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
 // ── Customer ───────────────────────────────────────────────
 
 model Customer {

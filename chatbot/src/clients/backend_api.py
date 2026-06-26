@@ -117,6 +117,13 @@ class BackendApiClient:
 
     # ── Store Config ──
 
+    async def get_full_store_info(self) -> dict[str, Any]:
+        """GET /bot/store-info — aggregated store info with branches."""
+        client = await self._get_client()
+        res = await client.get("/store-info")
+        res.raise_for_status()
+        return res.json()
+
     async def get_store_config(self) -> dict[str, Any]:
         """GET /bot/store-config — get all store config as key-value."""
         client = await self._get_client()

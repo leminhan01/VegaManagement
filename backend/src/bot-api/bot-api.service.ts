@@ -177,6 +177,68 @@ export class BotApiService {
 
   // ── Store Config ──────────────────────────────────────────
 
+  async getFullStoreInfo() {
+    const [configs, branches] = await Promise.all([
+      this.prisma.storeConfig.findMany({ orderBy: { key: 'asc' } }),
+      this.prisma.storeBranch.findMany({
+        where: { isActive: true },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      }),
+    ]);
+
+    // Build key-value map từ configs
+    const configMap: Record<string, string> = {};
+    for (const c of configs) {
+      configMap[c.key] = c.value;
+    }
+
+    // Parse open_hours JSON nếu có
+    let mainHours = null;
+    if (configMap.open_hours) {
+      try {
+        mainHours = JSON.parse(configMap.open_hours);
+      } catch {
+        mainHours = configMap.open_hours;
+      }
+    }
+
+    return {
+      store: {
+        name: configMap.store_name || '',
+        description: configMap.store_description || '',
+        address: configMap.address || '',
+        phone: configMap.phone || '',
+        hotline: configMap.hotline || '',
+        email: configMap.email || '',
+        logo: configMap.logo || '',
+        openHours: mainHours,
+      },
+      social: {
+        facebook: configMap.fanpage || '',
+        zalo: configMap.zalo_oa || '',
+        tiktok: configMap.tiktok || '',
+        website: configMap.website || '',
+      },
+      policies: {
+        returnPolicy: configMap.return_policy || '',
+        shippingPolicy: configMap.shipping_policy || '',
+        warrantyPolicy: configMap.warranty_policy || '',
+      },
+      branches: branches.map((b) => ({
+        id: b.id,
+        name: b.name,
+        address: b.address,
+        phone: b.phone,
+        email: b.email,
+        openHours: b.openHours,
+        coordinates:
+          b.latitude && b.longitude
+            ? { lat: b.latitude, lng: b.longitude }
+            : null,
+      })),
+    };
+  }
+
   async getStoreConfig() {
     const configs = await this.prisma.storeConfig.findMany({
       orderBy: { key: 'asc' },
@@ -276,6 +338,23 @@ export class BotApiService {
         isActive: dto.isActive !== undefined ? dto.isActive : true,
       },
     });
+  }
+
+  async getSession(sessionId: string) {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Không tìm thấy phiên chat với ID "${sessionId}"`);
+    }
+
+    return session;
   }
 
   async saveMessage(sessionId: string, dto: CreateMessageDto) {
