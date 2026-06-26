@@ -131,6 +131,8 @@ model Product {
   sku                 String              @unique
   unit                String              @default("cái")
   isActive            Boolean             @default(true)
+  isPublished         Boolean             @default(false)
+  embeddedAt          DateTime?
   fulfillmentStrategy FulfillmentStrategy?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt

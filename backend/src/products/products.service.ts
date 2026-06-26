@@ -2,8 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmbeddingSyncService } from './embeddings-sync.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
@@ -16,7 +19,36 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ProductsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly embeddingSync: EmbeddingSyncService,
+  ) {}
+
+  /**
+   * Đẩy product sang chatbot để (re-)tạo embedding. Best-effort:
+   * - Thành công → set `embeddedAt`.
+   * - Thất bại (chatbot/OpenAI lỗi) → log warning, KHÔNG throw, để nghiệp vụ
+   *   tạo/sửa vẫn hoàn tất. Admin có thể bấm nút Embed để retry.
+   */
+  private async refreshEmbedding(product: {
+    id: string;
+    name: string;
+    description?: string | null;
+  }): Promise<void> {
+    const ok = await this.embeddingSync.syncProductEmbedding(product);
+    if (ok) {
+      await this.prisma.product.update({
+        where: { id: product.id },
+        data: { embeddedAt: new Date() },
+      });
+    } else {
+      this.logger.warn(
+        `Embedding sản phẩm ${product.id} chưa được cập nhật — dùng nút Embed để thử lại.`,
+      );
+    }
+  }
 
   async findAll(
     filter: FilterProductsDto,
@@ -114,7 +146,7 @@ export class ProductsService {
       );
     }
 
-    return this.prisma.product.create({
+    const created = await this.prisma.product.create({
       data: {
         name: dto.name,
         slug: dto.slug!,
@@ -134,10 +166,18 @@ export class ProductsService {
         sku: dto.sku,
         unit: dto.unit ?? 'cái',
         isActive: dto.isActive ?? true,
+        isPublished: false, // mặc định draft — admin embed + publish thủ công
       },
       include: {
         category: true,
       },
+    });
+
+    // Tự tạo embedding ngay khi thêm sản phẩm (best-effort).
+    await this.refreshEmbedding(created);
+    return this.prisma.product.findUniqueOrThrow({
+      where: { id: created.id },
+      include: { category: true },
     });
   }
 
@@ -180,7 +220,7 @@ export class ProductsService {
       }
     }
 
-    return this.prisma.product.update({
+    const updated = await this.prisma.product.update({
       where: { id },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
@@ -208,14 +248,74 @@ export class ProductsService {
         category: true,
       },
     });
+
+    // Chỉ re-embed khi đổi nội dung ảnh hưởng embedding (name/description),
+    // tránh tốn OpenAI khi chỉ đổi stock/price.
+    if (dto.name !== undefined || dto.description !== undefined) {
+      await this.refreshEmbedding(updated);
+      return this.prisma.product.findUniqueOrThrow({
+        where: { id },
+        include: { category: true },
+      });
+    }
+    return updated;
   }
 
   async remove(id: string) {
     await this.findOne(id);
 
+    // Xóa embedding trong pgvector (best-effort) + ép unpublished để tránh
+    // trạng thái "zombie" (đã ẩn nhưng vẫn published).
+    await this.embeddingSync.deleteProductEmbedding(id);
+
     return this.prisma.product.update({
       where: { id },
-      data: { isActive: false },
+      data: { isActive: false, isPublished: false },
+    });
+  }
+
+  /**
+   * Tạo/cập nhật embedding thủ công (nút Embed). Trả về trạng thái + embeddedAt.
+   */
+  async embed(id: string) {
+    const product = await this.findOne(id);
+    const ok = await this.embeddingSync.syncProductEmbedding(product);
+    let embeddedAt: Date | null = product.embeddedAt;
+    if (ok) {
+      const refreshed = await this.prisma.product.update({
+        where: { id },
+        data: { embeddedAt: new Date() },
+        select: { embeddedAt: true },
+      });
+      embeddedAt = refreshed.embeddedAt;
+    }
+    return { success: ok, embeddedAt };
+  }
+
+  /**
+   * Publish sản phẩm lên chatbot. Yêu cầu ĐÃ có embedding (embeddedAt != null).
+   */
+  async publish(id: string) {
+    const product = await this.findOne(id);
+    if (!product.embeddedAt) {
+      throw new BadRequestException(
+        'Sản phẩm chưa có embedding. Vui lòng bấm Embed trước khi đăng.',
+      );
+    }
+    return this.prisma.product.update({
+      where: { id },
+      data: { isPublished: true },
+      include: { category: true },
+    });
+  }
+
+  /** Gỡ sản phẩm khỏi chatbot (giữ nguyên embedding để publish lại nhanh). */
+  async unpublish(id: string) {
+    await this.findOne(id);
+    return this.prisma.product.update({
+      where: { id },
+      data: { isPublished: false },
+      include: { category: true },
     });
   }
 

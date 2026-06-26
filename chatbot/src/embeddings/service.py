@@ -50,7 +50,9 @@ class EmbeddingService:
     def build_embedding_text(self, product: dict[str, Any]) -> str:
         """Build the text content to embed from product data.
 
-        Combines name, description, category, tags for rich semantic meaning.
+        Chỉ dùng ``name`` + ``description`` (theo yêu cầu thiết kế) để giữ
+        embedding tối giản và đồng nhất khi tạo/sửa sản phẩm. Các trường khác
+        (tags, thành phần, nguồn gốc...) không tham gia embedding.
         """
         parts: list[str] = []
 
@@ -58,31 +60,9 @@ class EmbeddingService:
         if name:
             parts.append(f"Tên sản phẩm: {name}")
 
-        short_desc = product.get("shortDesc", "")
-        if short_desc:
-            parts.append(f"Mô tả ngắn: {short_desc}")
-
         description = product.get("description", "")
-        if description and description != short_desc:
-            parts.append(f"Mô tả chi tiết: {description}")
-
-        category_name = product.get("categoryName", "")
-        if not category_name and isinstance(product.get("category"), dict):
-            category_name = product["category"].get("name", "")
-        if category_name:
-            parts.append(f"Danh mục: {category_name}")
-
-        tags = product.get("tags", [])
-        if tags:
-            parts.append(f"Từ khóa: {', '.join(tags)}")
-
-        ingredients = product.get("ingredients", "")
-        if ingredients:
-            parts.append(f"Thành phần: {ingredients}")
-
-        origin = product.get("origin", "")
-        if origin:
-            parts.append(f"Nguồn gốc: {origin}")
+        if description:
+            parts.append(f"Mô tả: {description}")
 
         return ". ".join(parts)
 
@@ -174,6 +154,7 @@ class EmbeddingService:
                 JOIN "Product" p ON p.id = pe."productId"
                 JOIN "Category" c ON c.id = p."categoryId"
                 WHERE p."isActive" = true
+                  AND p."isPublished" = true
                   AND 1 - (pe.embedding <=> $1::vector) >= $3
                 ORDER BY pe.embedding <=> $1::vector
                 LIMIT $2
@@ -230,6 +211,31 @@ class EmbeddingService:
 
         except Exception as e:
             logger.error(f"Failed to sync embedding for product {product_id}: {e}")
+            return False
+
+    async def upsert_embedding_from_data(self, product: dict[str, Any]) -> bool:
+        """Generate and save embedding từ object product do NestJS push sang.
+
+        Khác với ``sync_product_embedding`` (tự fetch sản phẩm qua bot-api), hàm
+        này nhận sẵn dữ liệu product — dùng cho luồng tạo/sửa sản phẩm ở NestJS
+        gọi ``POST /embeddings/upsert``. Tránh phụ thuộc filter ``isPublished``
+        của bot-api (sản phẩm mới chưa publish vẫn embed được).
+
+        Trả về True nếu thành công, False nếu lỗi.
+        """
+        try:
+            product_id = product.get("id")
+            if not product_id:
+                logger.error("upsert_embedding_from_data: thiếu product id")
+                return False
+
+            embedding_text = self.build_embedding_text(product)
+            vector = await self.generate_embedding(embedding_text)
+            await self.save_embedding(str(product_id), vector, embedding_text)
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to upsert embedding from data: {e}")
             return False
 
     async def sync_all_embeddings(self) -> dict[str, int]:

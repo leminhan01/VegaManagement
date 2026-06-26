@@ -32,7 +32,7 @@ export class BotApiService {
   async searchProducts(query: SearchProductsDto) {
     const { page, limit } = getPaginationParams(query);
 
-    const where: Record<string, unknown> = { isActive: true };
+    const where: Record<string, unknown> = { isActive: true, isPublished: true };
 
     if (query.q) {
       where.OR = [
@@ -68,7 +68,7 @@ export class BotApiService {
 
   async getProductDetail(id: string) {
     const product = await this.prisma.product.findFirst({
-      where: { id, isActive: true },
+      where: { id, isActive: true, isPublished: true },
       include: { category: { select: { name: true, slug: true } } },
     });
 
@@ -81,7 +81,7 @@ export class BotApiService {
 
   async getStock(id: string) {
     const product = await this.prisma.product.findFirst({
-      where: { id, isActive: true },
+      where: { id, isActive: true, isPublished: true },
       select: { stock: true, minStock: true, unit: true, name: true },
     });
 
@@ -100,7 +100,7 @@ export class BotApiService {
   async suggestProducts(query: SuggestProductsDto) {
     const { page, limit } = getPaginationParams(query);
 
-    const where: Record<string, unknown> = { isActive: true };
+    const where: Record<string, unknown> = { isActive: true, isPublished: true };
 
     if (query.prefs) {
       const prefs = query.prefs.split(',').map((p) => p.trim());

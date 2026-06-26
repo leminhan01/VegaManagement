@@ -139,4 +139,19 @@ export class ProductsController {
   updateStock(@Param('id') id: string, @Body() dto: UpdateStockDto) {
     return this.productsService.updateStock(id, dto.stock);
   }
+
+  @Patch(':id/embed')
+  embed(@Param('id') id: string) {
+    return this.productsService.embed(id);
+  }
+
+  @Patch(':id/publish')
+  publish(@Param('id') id: string) {
+    return this.productsService.publish(id);
+  }
+
+  @Patch(':id/unpublish')
+  unpublish(@Param('id') id: string) {
+    return this.productsService.unpublish(id);
+  }
 }

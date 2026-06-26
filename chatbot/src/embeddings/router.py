@@ -23,6 +23,15 @@ class SyncProductRequest(BaseModel):
     product_id: str = Field(description="ID của sản phẩm cần tạo/cập nhật embedding")
 
 
+class UpsertEmbeddingRequest(BaseModel):
+    """Request body để NestJS push dữ liệu product sang tạo/cập nhật embedding.
+
+    Dùng cho luồng tạo/sửa sản phẩm: NestJS gửi sẵn object product (ít nhất
+    ``id``, ``name``, ``description``) thay vì để chatbot tự fetch qua bot-api.
+    """
+    product: dict = Field(description="Object sản phẩm (id, name, description...)")
+
+
 class SemanticSearchRequest(BaseModel):
     """Request body for semantic search."""
     query: str = Field(description="Câu hỏi hoặc mô tả cần tìm kiếm")
@@ -53,6 +62,20 @@ async def sync_single_product(request: SyncProductRequest):
     if success:
         return SyncResponse(success=True, message=f"Đã đồng bộ embedding cho sản phẩm {request.product_id}")
     raise HTTPException(status_code=500, detail=f"Lỗi đồng bộ embedding cho sản phẩm {request.product_id}")
+
+
+@router.post("/upsert", response_model=SyncResponse)
+async def upsert_embedding(request: UpsertEmbeddingRequest):
+    """Tạo/cập nhật embedding từ object product do NestJS push sang.
+
+    Dùng cho luồng tạo/sửa sản phẩm: NestJS gửi sẵn dữ liệu product thay vì
+    để chatbot tự fetch (tránh phụ thuộc filter isPublished của bot-api).
+    """
+    success = await embedding_service.upsert_embedding_from_data(request.product)
+    if success:
+        product_id = request.product.get("id", "")
+        return SyncResponse(success=True, message=f"Đã upsert embedding cho sản phẩm {product_id}")
+    raise HTTPException(status_code=500, detail="Lỗi upsert embedding từ dữ liệu product")
 
 
 @router.post("/sync-all", response_model=BulkSyncResponse)
