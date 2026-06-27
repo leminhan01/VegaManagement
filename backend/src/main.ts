@@ -6,9 +6,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS cho Admin Panel và Chatbot Service
+  // CORS cho Admin Panel, Chatbot Service và Landing (storefront)
   app.enableCors({
-    origin: ['http://localhost:4000', 'http://localhost:8000'],
+    origin: ['http://localhost:4000', 'http://localhost:8000', 'http://localhost:3001'],
     credentials: true,
   });
 

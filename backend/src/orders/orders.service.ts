@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { OrderStatus, Prisma } from '@prisma/client';
+import { OrderStatus, PaymentMethod, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   createPaginatedResult,
@@ -108,27 +108,55 @@ export class OrdersService {
   }
 
   async create(dto: CreateOrderDto) {
+    // Admin path: customerId do client cung cấp (đã có JWT admin bảo vệ).
+    return this.createWithCustomerId(dto.customerId, {
+      items: dto.items,
+      shippingAddress: dto.shippingAddress,
+      shippingPhone: dto.shippingPhone,
+      paymentMethod: dto.paymentMethod,
+      note: dto.note,
+      discount: dto.discount,
+    });
+  }
+
+  /**
+   * Nguồn sự thật duy nhất cho logic tạo đơn (validate customer, normalize items,
+   * pricing, giảm stock + StockMovement, gen orderCode, tính tiền). Dùng chung cho:
+   * - Admin: create() ở trên.
+   * - Storefront: StorefrontService.createOrder() — customerId lấy từ JWT khách.
+   */
+  async createWithCustomerId(
+    customerId: string,
+    payload: {
+      items: OrderLine[];
+      shippingAddress: string;
+      shippingPhone: string;
+      paymentMethod: PaymentMethod;
+      note?: string | null;
+      discount?: number;
+    },
+  ) {
     return this.prisma.$transaction(async (tx) => {
-      await this.assertCustomerExists(tx, dto.customerId);
-      const normalizedItems = this.normalizeItems(dto.items);
+      await this.assertCustomerExists(tx, customerId);
+      const normalizedItems = this.normalizeItems(payload.items);
       const pricing = await this.getPricing(tx, normalizedItems);
       const orderCode = await this.generateOrderCode(tx);
       await this.decreaseStock(tx, normalizedItems, 'Order sale', orderCode);
 
       const totalAmount = this.calculateTotal(normalizedItems, pricing.priceMap);
-      const discount = dto.discount ?? 0;
+      const discount = payload.discount ?? 0;
 
       return tx.order.create({
         data: {
           orderCode,
-          customerId: dto.customerId,
+          customerId,
           totalAmount,
           discount,
           finalAmount: Math.max(0, totalAmount - discount),
-          shippingAddress: dto.shippingAddress,
-          shippingPhone: dto.shippingPhone,
-          note: dto.note,
-          paymentMethod: dto.paymentMethod,
+          shippingAddress: payload.shippingAddress,
+          shippingPhone: payload.shippingPhone,
+          note: payload.note,
+          paymentMethod: payload.paymentMethod,
           items: {
             create: normalizedItems.map((item) => ({
               productId: item.productId,

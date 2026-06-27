@@ -1,0 +1,37 @@
+---
+// Storefront.astro — Khu vực mua sắm trên landing page.
+// Render shell tĩnh (tiêu đề, ô tìm kiếm, chip danh mục, lưới sản phẩm);
+// storefront.js build động giỏ hàng, modal đăng nhập/đăng ký, checkout, đơn của tôi.
+const storefrontApi =
+  import.meta.env.PUBLIC_STOREFRONT_API_URL ||
+  'http://localhost:3000/api/storefront';
+---
+
+<section id="store" class="store-section">
+  <div class="container">
+    <div class="store-head">
+      <div>
+        <h2 class="store-title">Sản phẩm chay</h2>
+        <p class="store-subtitle">Thực phẩm sạch 100% thực vật — đặt hàng giao tận nơi</p>
+      </div>
+      <div class="store-toolbar">
+        <div class="store-search">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <input id="vf-search" type="search" placeholder="Tìm sản phẩm..." aria-label="Tìm sản phẩm" />
+        </div>
+      </div>
+    </div>
+
+    <div id="vf-chips" class="store-chips" role="group" aria-label="Lọc theo danh mục"></div>
+
+    <div id="vf-products" class="store-grid" aria-live="polite">
+      <p class="store-empty">Đang tải sản phẩm...</p>
+    </div>
+  </div>
+</section>
+
+<link rel="stylesheet" href="/styles/storefront.css" />
+<script define:vars={{ storefrontApi }}>
+  window.__STOREFRONT_API__ = storefrontApi;
+</script>
+<script is:inline src="/scripts/storefront.js"></script>

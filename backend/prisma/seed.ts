@@ -235,6 +235,7 @@ async function main() {
         unit: p.unit,
         allergens: [],
         isActive: p.stock > 0,
+        isPublished: p.stock > 0,
       },
     });
     products.push(product);
@@ -258,8 +259,20 @@ async function main() {
   ];
 
   const customers = [];
+  // Khách demo có thể đăng nhập trên storefront (SĐT 0901234567 / mật khẩu customer123)
+  const storefrontPasswordHash = await bcrypt.hash('customer123', 10);
+  const STOREFRONT_DEMO_PHONE = '0901234567';
   for (const c of customersData) {
-    const customer = await prisma.customer.create({ data: c });
+    const isStorefrontDemo = c.phone === STOREFRONT_DEMO_PHONE;
+    const customer = await prisma.customer.create({
+      data: {
+        ...c,
+        ...(isStorefrontDemo && {
+          passwordHash: storefrontPasswordHash,
+          source: 'STOREFRONT',
+        }),
+      },
+    });
     customers.push(customer);
   }
   console.log(`✅ ${customers.length} customers created`);

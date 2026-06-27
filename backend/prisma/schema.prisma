@@ -376,6 +376,8 @@ model Customer {
   tags              String[]      @default([])
   group             String        @default("REGULAR")
   note              String?
+  passwordHash      String?                       // Mật khẩu (bcrypt) cho khách tự đăng ký trên storefront
+  source            String        @default("ADMIN") // "ADMIN" (tạo bởi admin/chatbot) | "STOREFRONT" (khách tự đăng ký)
   orders            Order[]
   chatSessions      ChatSession[]
   createdAt         DateTime      @default(now())

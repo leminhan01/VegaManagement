@@ -13,6 +13,7 @@ import { StatsModule } from './stats/stats.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { StoreConfigModule } from './store-config/store-config.module';
 import { StoreBranchModule } from './store-branch/store-branch.module';
+import { StorefrontModule } from './storefront/storefront.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
@@ -33,6 +34,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     InventoryModule,
     StoreConfigModule,
     StoreBranchModule,
+    StorefrontModule,
   ],
   providers: [
     // Global JWT guard — all routes require auth unless marked @Public()
