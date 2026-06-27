@@ -10,10 +10,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@phosphor-icons/web": "^2.1.2",
     "astro": "^5.7.10"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "@astrojs/check": "^0.9.4"
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.8.3"
   }
 }

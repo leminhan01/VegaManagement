@@ -1,12 +1,14 @@
 ---
+import '@phosphor-icons/web/regular';
+
 interface Props {
   title?: string;
   description?: string;
 }
 
 const {
-  title = 'VegiFlow — Cửa hàng thực phẩm chay online',
-  description = 'VegiFlow - Cửa hàng thực phẩm chay online. Tư vấn sản phẩm thông minh bằng AI, giao hàng tận nơi.',
+  title = 'VegiFlow | Thực phẩm chay tươi sạch, giao tận nơi',
+  description = 'VegiFlow, cửa hàng thực phẩm chay online. Hơn 100 sản phẩm organic, tư vấn miễn phí, giao nội thành trong 2 giờ.',
 } = Astro.props;
 ---
 
@@ -17,6 +19,7 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#faf9f7" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -34,6 +37,7 @@ const {
   </head>
   <body>
     <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+    <div class="nav-sentinel" aria-hidden="true"></div>
     <div class="noise-overlay" aria-hidden="true"></div>
 
     <slot />

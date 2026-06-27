@@ -220,3 +220,49 @@ button {
 .text-pretty {
   text-wrap: pretty;
 }
+
+/* ── Visually Hidden (a11y) ────────────────── */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Nav scroll sentinel ───────────────────── */
+.nav-sentinel {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* ── Phosphor icon defaults ────────────────── */
+.ph {
+  font-style: normal;
+  vertical-align: -0.125em;
+}
+
+/* ── Reduced Motion ────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

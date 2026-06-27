@@ -1,40 +1,36 @@
 ---
-const features = [
+const featured = [
   {
-    icon: '🤖',
-    title: 'AI tư vấn thông minh',
-    desc: 'Chatbot AI hiểu nhu cầu của bạn, tư vấn sản phẩm phù hợp dựa trên sở thích, chế độ dinh dưỡng và ngân sách.',
-    image: 'https://picsum.photos/seed/veg-ai/800/600',
+    icon: 'ph-sparkle',
+    title: 'Trợ lý tư vấn cá nhân hóa',
+    desc: 'Chat với trợ lý ảo để được gợi ý món phù hợp sở thích, chế độ dinh dưỡng và ngân sách của bạn, hoàn toàn miễn phí.',
+    image: 'https://picsum.photos/seed/veg-ai-advisor/900/700',
+    points: ['Hiểu khẩu vị của bạn', 'Gợi ý món theo ngân sách', 'Tra cứu đơn hàng tức thì'],
   },
   {
-    icon: '🔍',
-    title: 'Tìm kiếm ngữ nghĩa',
-    desc: 'Công nghệ RAG giúp tìm sản phẩm theo ý nghĩa, không chỉ từ khóa. Hỏi "món nào nhiều protein" và nhận gợi ý chính xác.',
-    image: 'https://picsum.photos/seed/veg-search/800/600',
-  },
-  {
-    icon: '🚚',
+    icon: 'ph-truck',
     title: 'Giao hàng siêu tốc',
-    desc: 'Giao nội thành TP.HCM trong 2-4 giờ. Freeship cho đơn từ 300.000đ. Đổi trả trong vòng 7 ngày.',
-    image: 'https://picsum.photos/seed/veg-delivery/800/600',
+    desc: 'Giao nội thành TP.HCM trong 2 đến 4 giờ, đóng gói cẩn thận giữ trọn độ tươi. Freeship cho đơn từ 300.000đ.',
+    image: 'https://picsum.photos/seed/veg-delivery-fast/900/700',
+    points: ['Giao 2-4h nội thành', 'Freeship đơn từ 300k', 'Đổi trả trong 7 ngày'],
+  },
+];
+
+const more = [
+  {
+    icon: 'ph-chats',
+    title: 'Chat mọi nền tảng',
+    desc: 'Nhắn tin qua Zalo, Facebook Messenger hoặc web, bất cứ lúc nào.',
   },
   {
-    icon: '📱',
-    title: 'Đa nền tảng',
-    desc: 'Chat qua Web, Zalo, hoặc Facebook Messenger. Bất cứ đâu, bất cứ lúc nào.',
-    image: 'https://picsum.photos/seed/veg-platform/800/600',
-  },
-  {
-    icon: '🌱',
+    icon: 'ph-seal-check',
     title: 'Nguồn gốc rõ ràng',
-    desc: 'Mọi sản phẩm đều có thông tin nguồn gốc, thành phần, chứng nhận VietGAP/Organic.',
-    image: 'https://picsum.photos/seed/veg-organic/800/600',
+    desc: 'Mỗi sản phẩm đều ghi rõ thành phần, chứng nhận VietGAP và Organic.',
   },
   {
-    icon: '💬',
-    title: 'Hỗ trợ 24/7',
-    desc: 'AI assistant luôn sẵn sàng trả lời câu hỏi, tra cứu đơn hàng, và hỗ trợ bạn mọi lúc.',
-    image: 'https://picsum.photos/seed/veg-support/800/600',
+    icon: 'ph-arrow-counter-clockwise',
+    title: 'Đổi trả 7 ngày',
+    desc: 'Không vừa ý? Đổi trả trong 7 ngày, hoàn tiền nhanh chóng.',
   },
 ];
 ---
@@ -42,19 +38,17 @@ const features = [
 <section class="features" id="features" aria-labelledby="features-title">
   <div class="container">
     <header class="section-header reveal">
-      <p class="section-eyebrow">Tại sao chọn chúng tôi</p>
-      <h2 id="features-title" class="section-title text-balance">Trải nghiệm mua sắm thông minh</h2>
-      <p class="section-desc text-pretty">Kết hợp công nghệ AI với thực phẩm chay chất lượng cao</p>
+      <h2 id="features-title" class="section-title text-balance">Vì sao chọn VegiFlow</h2>
+      <p class="section-desc text-pretty">
+        Thực phẩm chay chất lượng cao, kết hợp dịch vụ tận tâm để mỗi bữa ăn của bạn thêm nhẹ nhàng.
+      </p>
     </header>
 
-    <div class="features-list">
-      {features.map((feat, i) => (
+    <!-- Featured zig-zag rows -->
+    <div class="featured-list">
+      {featured.map((feat, i) => (
         <article
-          class:list={[
-            'feature-row',
-            'reveal',
-            { 'feature-row--reverse': i % 2 !== 0 },
-          ]}
+          class:list={['feature-row', 'reveal', { 'feature-row--reverse': i % 2 !== 0 }]}
         >
           <div class="feature-image-col">
             <div class="feature-image-wrap">
@@ -64,13 +58,34 @@ const features = [
                 loading="lazy"
                 class="feature-image"
               />
+              <span class="feature-icon-badge" aria-hidden="true">
+                <i class={`ph ${feat.icon}`}></i>
+              </span>
             </div>
           </div>
           <div class="feature-text-col">
-            <span class="feature-icon" aria-hidden="true">{feat.icon}</span>
             <h3 class="feature-title">{feat.title}</h3>
             <p class="feature-desc text-pretty">{feat.desc}</p>
+            <ul class="feature-points" role="list">
+              {feat.points.map((p) => (
+                <li>
+                  <i class="ph ph-seal-check" aria-hidden="true"></i>
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
           </div>
+        </article>
+      ))}
+    </div>
+
+    <!-- Secondary compact grid -->
+    <div class="more-grid">
+      {more.map((m, i) => (
+        <article class:list={['more-card', 'reveal', `reveal-delay-${(i % 3) + 1}`]}>
+          <span class="more-icon" aria-hidden="true"><i class={`ph ${m.icon}`}></i></span>
+          <h3 class="more-title">{m.title}</h3>
+          <p class="more-desc text-pretty">{m.desc}</p>
         </article>
       ))}
     </div>
@@ -88,15 +103,6 @@ const features = [
     margin-bottom: var(--space-4xl);
   }
 
-  .section-eyebrow {
-    font-size: var(--text-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--ls-wider);
-    color: var(--color-primary);
-    margin-bottom: var(--space-sm);
-  }
-
   .section-title {
     font-family: var(--font-display);
     font-size: var(--text-h2);
@@ -109,15 +115,16 @@ const features = [
   .section-desc {
     font-size: var(--text-body);
     color: var(--color-text-secondary);
-    max-width: 480px;
+    max-width: 520px;
     margin-inline: auto;
   }
 
-  /* ── Zig-zag rows ──────────────────────── */
-  .features-list {
+  /* ── Featured rows ──────────────────────── */
+  .featured-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4xl);
+    gap: var(--space-5xl);
+    margin-bottom: var(--space-5xl);
   }
 
   .feature-row {
@@ -127,24 +134,16 @@ const features = [
     align-items: center;
   }
 
-  .feature-row--reverse {
-    direction: rtl;
-  }
-
-  .feature-row--reverse > * {
-    direction: ltr;
-  }
-
-  /* Image */
-  .feature-image-col {
-    position: relative;
+  .feature-row--reverse .feature-image-col {
+    order: 2;
   }
 
   .feature-image-wrap {
+    position: relative;
     border-radius: var(--radius-xl);
     overflow: hidden;
     aspect-ratio: 4 / 3;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 24px 48px -22px rgba(20, 83, 45, 0.3);
   }
 
   .feature-image {
@@ -155,28 +154,34 @@ const features = [
   }
 
   .feature-row:hover .feature-image {
-    transform: scale(1.03);
+    transform: scale(1.04);
   }
 
-  /* Text */
+  .feature-icon-badge {
+    position: absolute;
+    bottom: var(--space-lg);
+    left: var(--space-lg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    font-size: 1.6rem;
+    color: #fff;
+    background: rgba(34, 166, 90, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 10px 24px -8px rgba(20, 83, 45, 0.4);
+  }
+
   .feature-text-col {
-    max-width: 440px;
+    max-width: 460px;
   }
 
   .feature-row--reverse .feature-text-col {
     margin-left: auto;
-  }
-
-  .feature-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 52px;
-    height: 52px;
-    font-size: 1.5rem;
-    background: var(--color-primary-muted);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-lg);
   }
 
   .feature-title {
@@ -192,18 +197,91 @@ const features = [
     font-size: var(--text-body);
     line-height: var(--lh-relaxed);
     color: var(--color-text-secondary);
+    margin-bottom: var(--space-lg);
+  }
+
+  .feature-points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .feature-points li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .feature-points i {
+    font-size: 1.1rem;
+    color: var(--color-primary);
+  }
+
+  /* ── Secondary grid ─────────────────────── */
+  .more-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+  }
+
+  .more-card {
+    padding: var(--space-xl);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) ease;
+  }
+
+  .more-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 38px -22px rgba(20, 83, 45, 0.28);
+    border-color: var(--color-primary-light);
+  }
+
+  .more-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+    color: var(--color-primary);
+    background: var(--color-primary-muted);
+    border-radius: 13px;
+    margin-bottom: var(--space-md);
+  }
+
+  .more-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-deep);
+    margin-bottom: var(--space-xs);
+    letter-spacing: var(--ls-tight);
+  }
+
+  .more-desc {
+    font-size: var(--text-small);
+    line-height: var(--lh-body);
+    color: var(--color-text-secondary);
   }
 
   /* ── Responsive ──────────────────────────── */
   @media (max-width: 768px) {
-    .feature-row,
-    .feature-row--reverse {
+    .feature-row {
       grid-template-columns: 1fr;
       gap: var(--space-xl);
     }
 
-    .feature-row--reverse {
-      direction: ltr;
+    .feature-row--reverse .feature-image-col {
+      order: 0;
     }
 
     .feature-text-col {
@@ -216,6 +294,10 @@ const features = [
 
     .feature-image-wrap {
       aspect-ratio: 16 / 10;
+    }
+
+    .more-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>

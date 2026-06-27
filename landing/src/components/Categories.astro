@@ -1,79 +1,46 @@
 ---
 const categories = [
-  {
-    icon: '🥬',
-    title: 'Thực phẩm tươi',
-    desc: 'Rau củ, trái cây sạch',
-    image: 'https://picsum.photos/seed/veg-fresh/600/400',
-    span: 'wide',
-  },
-  {
-    icon: '🫘',
-    title: 'Thực phẩm khô',
-    desc: 'Hạt, đậu, nấm khô',
-    image: 'https://picsum.photos/seed/veg-dried/400/400',
-  },
-  {
-    icon: '🧂',
-    title: 'Gia vị',
-    desc: 'Nước mắm chay, tương',
-    image: 'https://picsum.photos/seed/veg-spice/400/400',
-  },
-  {
-    icon: '❄️',
-    title: 'Đông lạnh',
-    desc: 'Thịt thực vật, há cảo',
-    image: 'https://picsum.photos/seed/veg-frozen/400/400',
-  },
-  {
-    icon: '🍵',
-    title: 'Đồ uống',
-    desc: 'Trà, nước ép, sinh tố',
-    image: 'https://picsum.photos/seed/veg-drink/400/400',
-  },
-  {
-    icon: '🍿',
-    title: 'Đồ ăn vặt',
-    desc: 'Snack chay, hạt rang',
-    image: 'https://picsum.photos/seed/veg-snack/400/400',
-  },
-  {
-    icon: '💪',
-    title: 'Thực phẩm bổ sung',
-    desc: 'Vitamin, protein thực vật',
-    image: 'https://picsum.photos/seed/veg-supplement/400/400',
-  },
-  {
-    icon: '🍱',
-    title: 'Món ăn sẵn',
-    desc: 'Đồ hộp, mì chay',
-    image: 'https://picsum.photos/seed/veg-ready/600/400',
-    span: 'wide',
-  },
+  { icon: 'ph-carrot', title: 'Thực phẩm tươi', desc: 'Rau củ, trái cây sạch', image: 'https://picsum.photos/seed/veg-fresh-greens/700/700', span: 'wide' },
+  { icon: 'ph-plant', title: 'Thực phẩm khô', desc: 'Hạt, đậu, nấm khô', image: 'https://picsum.photos/seed/veg-dried-beans/600/600' },
+  { icon: 'ph-cooking-pot', title: 'Gia vị', desc: 'Nước mắm chay, tương', image: 'https://picsum.photos/seed/veg-spice-pot/600/600' },
+  { icon: 'ph-snowflake', title: 'Đông lạnh', desc: 'Thịt thực vật, há cảo', image: 'https://picsum.photos/seed/veg-frozen-dumpling/600/600' },
+  { icon: 'ph-coffee', title: 'Đồ uống', desc: 'Trà, nước ép, sinh tố', image: 'https://picsum.photos/seed/veg-drink-tea/600/600' },
+  { icon: 'ph-cookie', title: 'Đồ ăn vặt', desc: 'Snack chay, hạt rang', image: 'https://picsum.photos/seed/veg-snack-nuts/600/600' },
+  { icon: 'ph-pill', title: 'Bổ sung', desc: 'Vitamin, protein thực vật', image: 'https://picsum.photos/seed/veg-supplement/600/600' },
+  { icon: 'ph-bowl-food', title: 'Món ăn sẵn', desc: 'Đồ hộp, mì chay', image: 'https://picsum.photos/seed/veg-ready-meal/700/700', span: 'wide' },
 ];
 ---
 
 <section class="categories" id="categories" aria-labelledby="categories-title">
   <div class="container">
     <header class="section-header reveal">
-      <p class="section-eyebrow">Khám phá</p>
       <h2 id="categories-title" class="section-title text-balance">Danh mục sản phẩm</h2>
-      <p class="section-desc text-pretty">Đa dạng thực phẩm chay từ khắp nơi trên thế giới</p>
+      <p class="section-desc text-pretty">Đa dạng thực phẩm chay cho mọi bữa ăn, từ bếp nhà đến bàn tiệc.</p>
     </header>
 
     <div class="categories-grid">
       {categories.map((cat, i) => (
         <article
-          class:list={['category-card', 'reveal', `reveal-delay-${(i % 4) + 1}`, { 'category-card--wide': cat.span === 'wide' }]}
+          class:list={[
+            'category-card',
+            'reveal',
+            `reveal-delay-${(i % 4) + 1}`,
+            { 'category-card--wide': cat.span === 'wide' },
+          ]}
         >
           <div class="category-image" aria-hidden="true">
             <img src={cat.image} alt="" loading="lazy" />
           </div>
-          <div class="category-overlay"></div>
+          <div class="category-overlay" aria-hidden="true"></div>
           <div class="category-content">
-            <span class="category-icon" aria-hidden="true">{cat.icon}</span>
-            <h3 class="category-title">{cat.title}</h3>
-            <p class="category-desc">{cat.desc}</p>
+            <span class="category-icon" aria-hidden="true">
+              <i class={`ph ${cat.icon}`}></i>
+            </span>
+            <div class="category-meta">
+              <h3 class="category-title">{cat.title}</h3>
+              <p class="category-desc">{cat.desc}</p>
+            </div>
+            <span class="category-arrow" aria-hidden="true"><i class="ph ph-arrow-up-right"></i></span>
           </div>
         </article>
       ))}
@@ -89,15 +56,6 @@ const categories = [
   .section-header {
     text-align: center;
     margin-bottom: var(--space-4xl);
-  }
-
-  .section-eyebrow {
-    font-size: var(--text-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--ls-wider);
-    color: var(--color-primary);
-    margin-bottom: var(--space-sm);
   }
 
   .section-title {
@@ -130,14 +88,15 @@ const categories = [
     overflow: hidden;
     aspect-ratio: 1;
     cursor: pointer;
+    background: var(--color-deep);
     transition:
       transform var(--duration-normal) var(--ease-out),
       box-shadow var(--duration-normal) var(--ease-out);
   }
 
   .category-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
+    transform: translateY(-5px);
+    box-shadow: 0 22px 44px -18px rgba(20, 83, 45, 0.4);
   }
 
   .category-card:active {
@@ -149,7 +108,6 @@ const categories = [
     aspect-ratio: 2 / 1;
   }
 
-  /* Image */
   .category-image {
     position: absolute;
     inset: 0;
@@ -163,17 +121,17 @@ const categories = [
   }
 
   .category-card:hover .category-image img {
-    transform: scale(1.05);
+    transform: scale(1.07);
   }
 
-  /* Overlay */
   .category-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(20, 83, 45, 0.1) 0%,
-      rgba(20, 83, 45, 0.6) 100%
+      rgba(15, 61, 32, 0.05) 0%,
+      rgba(15, 61, 32, 0.45) 55%,
+      rgba(15, 61, 32, 0.78) 100%
     );
     transition: background var(--duration-normal) ease;
   }
@@ -181,29 +139,46 @@ const categories = [
   .category-card:hover .category-overlay {
     background: linear-gradient(
       180deg,
-      rgba(20, 83, 45, 0.2) 0%,
-      rgba(20, 83, 45, 0.7) 100%
+      rgba(15, 61, 32, 0.1) 0%,
+      rgba(15, 61, 32, 0.55) 50%,
+      rgba(15, 61, 32, 0.88) 100%
     );
   }
 
-  /* Content */
   .category-content {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-md);
     padding: var(--space-lg);
     color: #fff;
   }
 
   .category-icon {
-    font-size: 1.5rem;
-    margin-bottom: var(--space-xs);
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: 11px;
+    flex-shrink: 0;
+  }
+
+  .category-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
   }
 
   .category-title {
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     margin-bottom: 2px;
     letter-spacing: var(--ls-tight);
@@ -211,8 +186,32 @@ const categories = [
 
   .category-desc {
     font-size: var(--text-xs);
-    opacity: 0.8;
+    opacity: 0.82;
     font-weight: 400;
+  }
+
+  .category-arrow {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    color: #fff;
+    background: var(--color-primary);
+    border-radius: 50%;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity var(--duration-normal) ease,
+      transform var(--duration-normal) var(--ease-out);
+    align-self: center;
+  }
+
+  .category-card:hover .category-arrow {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   /* ── Responsive ──────────────────────────── */
