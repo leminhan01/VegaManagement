@@ -114,6 +114,22 @@ export class ProductsService {
   }
 
   async create(dto: CreateProductDto) {
+    return this.createInternal(dto, true);
+  }
+
+  /**
+   * Giống create() nhưng embedding chạy fire-and-forget (không await). Dành cho
+   * import hàng loạt: mỗi lần sync embedding có timeout 30s, nếu await từng dòng
+   * thì file vài trăm dòng sẽ bị treo / timeout gateway.
+   */
+  async createNoBlock(dto: CreateProductDto) {
+    return this.createInternal(dto, false);
+  }
+
+  private async createInternal(
+    dto: CreateProductDto,
+    blockingEmbedding: boolean,
+  ) {
     // Check unique slug
     if (dto.slug) {
       const existingSlug = await this.prisma.product.findUnique({
@@ -174,7 +190,16 @@ export class ProductsService {
     });
 
     // Tự tạo embedding ngay khi thêm sản phẩm (best-effort).
-    await this.refreshEmbedding(created);
+    if (blockingEmbedding) {
+      await this.refreshEmbedding(created);
+    } else {
+      // Fire-and-forget: không chặn luồng import. Bắt lỗi để tránh unhandled rejection.
+      void this.refreshEmbedding(created).catch((err) =>
+        this.logger.warn(
+          `Embedding nền cho sản phẩm ${created.id} thất bại: ${err instanceof Error ? err.message : err}`,
+        ),
+      );
+    }
     return this.prisma.product.findUniqueOrThrow({
       where: { id: created.id },
       include: { category: true },
@@ -182,6 +207,22 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto) {
+    return this.updateInternal(id, dto, true);
+  }
+
+  /**
+   * Giống update() nhưng embedding chạy fire-and-forget — dành cho import hàng
+   * loạt (xem createNoBlock).
+   */
+  async updateNoBlock(id: string, dto: UpdateProductDto) {
+    return this.updateInternal(id, dto, false);
+  }
+
+  private async updateInternal(
+    id: string,
+    dto: UpdateProductDto,
+    blockingEmbedding: boolean,
+  ) {
     await this.findOne(id);
 
     // Check unique constraints for slug if being updated
@@ -252,11 +293,18 @@ export class ProductsService {
     // Chỉ re-embed khi đổi nội dung ảnh hưởng embedding (name/description),
     // tránh tốn OpenAI khi chỉ đổi stock/price.
     if (dto.name !== undefined || dto.description !== undefined) {
-      await this.refreshEmbedding(updated);
-      return this.prisma.product.findUniqueOrThrow({
-        where: { id },
-        include: { category: true },
-      });
+      if (blockingEmbedding) {
+        await this.refreshEmbedding(updated);
+        return this.prisma.product.findUniqueOrThrow({
+          where: { id },
+          include: { category: true },
+        });
+      }
+      void this.refreshEmbedding(updated).catch((err) =>
+        this.logger.warn(
+          `Embedding nền cho sản phẩm ${id} thất bại: ${err instanceof Error ? err.message : err}`,
+        ),
+      );
     }
     return updated;
   }

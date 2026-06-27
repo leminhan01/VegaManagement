@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  StreamableFile,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -24,6 +25,12 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ResponseForma
   intercept(context: ExecutionContext, next: CallHandler): Observable<ResponseFormat<T>> {
     return next.handle().pipe(
       map((data) => {
+        // Tải file nhị phân (StreamableFile): trả nguyên vẹn để NestJS stream
+        // binary, KHÔNG wrap thành { data } (sẽ làm hỏng bytes khi JSON hóa).
+        if (data instanceof StreamableFile) {
+          return data as unknown as ResponseFormat<T>;
+        }
+
         // If the response already has a { data, meta } structure (from pagination util),
         // pass it through as-is.
         if (

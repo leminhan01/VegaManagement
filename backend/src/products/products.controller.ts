@@ -9,15 +9,19 @@ import {
   Body,
   Param,
   Query,
+  Res,
   HttpCode,
   HttpStatus,
   UploadedFile,
   UseInterceptors,
+  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { createHash } from 'crypto';
 import { ProductsService } from './products.service';
+import { ProductsImportService } from './products-import.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
@@ -41,11 +45,41 @@ type CloudinaryUploadResponse = {
 @Controller('products')
 @ApiBearerAuth('access_token')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly importService: ProductsImportService,
+  ) {}
 
   @Get()
   findAll(@Query() filter: FilterProductsDto) {
     return this.productsService.findAll(filter);
+  }
+
+  // ── Import Excel ── (KHAI BÁO TRƯỚC @Get(':id') để tránh ':id' bắt chữ "import")
+
+  @Get('import/template')
+  async downloadImportTemplate(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const buffer = await this.importService.generateImportTemplateBuffer();
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="mau-import-san-pham.xlsx"',
+    });
+    return new StreamableFile(buffer);
+  }
+
+  @Post('import/preview')
+  @UseInterceptors(FileInterceptor('file'))
+  previewImport(@UploadedFile() file?: UploadedProductImage) {
+    return this.importService.previewImport(file);
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  confirmImport(@UploadedFile() file?: UploadedProductImage) {
+    return this.importService.confirmImport(file);
   }
 
   @Get(':id')
