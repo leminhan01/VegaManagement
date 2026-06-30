@@ -166,6 +166,11 @@ export interface FifoFefoSuggestion {
   }>;
 }
 
+// Sub-types cho các endpoint /stats riêng lẻ (cùng shape với AdvancedInventoryReport).
+export type InventoryValueReport = AdvancedInventoryReport["inventoryValue"];
+export type ExpirationReport = AdvancedInventoryReport["expiration"];
+export type StockMovementReport = AdvancedInventoryReport["movement"];
+
 export interface AdvancedInventoryReport {
   inventoryValue: {
     totalValue: number;
