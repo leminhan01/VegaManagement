@@ -1,0 +1,68 @@
+---
+// don-hang.astro — Trang "Tài khoản của tôi" (route riêng thay cho modal đơn hàng).
+// Shell tĩnh; storefront.js nhận diện #vf-account-page rồi đổ profile + đơn hàng.
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import ChatWidget from '../components/ChatWidget.astro';
+
+const storefrontApi =
+  import.meta.env.PUBLIC_STOREFRONT_API_URL ||
+  'http://localhost:3000/api/storefront';
+---
+
+<Layout
+  title="Tài khoản của tôi | VegiFlow"
+  description="Xem thông tin tài khoản và lịch sử đơn hàng của bạn tại VegiFlow."
+>
+  <Nav />
+  <main id="main-content" class="account-page">
+    <div class="container container--narrow account-container" id="vf-account-page">
+      <!-- Cổng đăng nhập (storefront.js hiện khi chưa login) -->
+      <div class="vf-account-gate" id="vf-account-gate" hidden>
+        <i class="ph ph-user-circle-plus" aria-hidden="true"></i>
+        <h1>Đăng nhập để xem tài khoản</h1>
+        <p>Đăng nhập để theo dõi đơn hàng và thông tin cá nhân của bạn.</p>
+        <button class="vf-account-gate-btn" id="vf-account-login">
+          <i class="ph ph-sign-in"></i> Đăng nhập
+        </button>
+      </div>
+
+      <!-- Nội dung tài khoản (storefront.js hiện khi đã login) -->
+      <div id="vf-account-content" hidden>
+        <header class="account-head">
+          <div>
+            <h1 class="account-title">Tài khoản của tôi</h1>
+            <p class="account-greet" id="vf-account-greet"></p>
+          </div>
+          <button class="account-logout" id="vf-account-logout" type="button">
+            <i class="ph ph-sign-out" aria-hidden="true"></i>
+            <span>Đăng xuất</span>
+          </button>
+        </header>
+
+        <section class="vf-profile-card" id="vf-account-profile" aria-label="Thông tin tài khoản">
+          <!-- storefront.js đổ thông tin khách -->
+        </section>
+
+        <section class="account-orders" aria-label="Đơn hàng của tôi">
+          <div class="account-orders-head">
+            <h2 class="account-orders-title">Đơn hàng của tôi</h2>
+            <p class="account-orders-sub" id="vf-orders-sub"></p>
+          </div>
+          <div id="vf-orders-body">
+            <!-- storefront.js đổ skeleton / cards / empty -->
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <Footer />
+  <ChatWidget />
+</Layout>
+
+<link rel="stylesheet" href="/styles/storefront.css" />
+<script define:vars={{ storefrontApi }}>
+  window.__STOREFRONT_API__ = storefrontApi;
+</script>
+<script is:inline src="/scripts/storefront.js"></script>
