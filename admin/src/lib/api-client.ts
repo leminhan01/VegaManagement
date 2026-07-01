@@ -538,6 +538,41 @@ class ApiClient {
   toggleStoreBranch(id: string) {
     return this.fetch(`/store-branches/${id}/toggle`, { method: "PATCH" });
   }
+
+  // ── Email Reports (báo cáo định kỳ qua email) ──
+  getEmailReports() {
+    return this.fetch(`/email-reports`);
+  }
+
+  getEmailReport(id: string) {
+    return this.fetch(`/email-reports/${id}`);
+  }
+
+  createEmailReport(data: unknown) {
+    return this.fetch(`/email-reports`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  updateEmailReport(id: string, data: unknown) {
+    return this.fetch(`/email-reports/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  deleteEmailReport(id: string) {
+    return this.fetch(`/email-reports/${id}`, { method: "DELETE" });
+  }
+
+  toggleEmailReport(id: string) {
+    return this.fetch(`/email-reports/${id}/toggle`, { method: "PATCH" });
+  }
+
+  sendEmailReportNow(id: string) {
+    return this.fetch(`/email-reports/${id}/send-now`, { method: "POST" });
+  }
 }
 
 export const apiClient = new ApiClient();

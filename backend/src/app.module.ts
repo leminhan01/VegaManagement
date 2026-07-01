@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -14,6 +15,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { StoreConfigModule } from './store-config/store-config.module';
 import { StoreBranchModule } from './store-branch/store-branch.module';
 import { StorefrontModule } from './storefront/storefront.module';
+import { EmailReportsModule } from './email-reports/email-reports.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
@@ -22,6 +24,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     ProductsModule,
@@ -35,6 +38,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     StoreConfigModule,
     StoreBranchModule,
     StorefrontModule,
+    EmailReportsModule,
   ],
   providers: [
     // Global JWT guard — all routes require auth unless marked @Public()

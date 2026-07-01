@@ -447,3 +447,38 @@ model ChatMessage {
   metadata  Json?
   createdAt DateTime    @default(now())
 }
+
+// ── Email Report Config (cấu hình báo cáo định kỳ qua email) ──
+
+model EmailReportConfig {
+  id            String         @id @default(uuid())
+  name          String                          // "Báo cáo ngày cho quản lý"
+  recipients    String[]                        // ["manager@x.com", ...]
+  intervalHours Int                             // Chu kỳ gửi (giờ): 1, 3, 5, 12, 24 ...
+  sections      String[]                        // Mục nội dung — subset của SECTION_WHITELIST
+  isActive      Boolean        @default(true)
+  lastSentAt    DateTime?                       // Lần gửi cuối
+  nextRunAt     DateTime       @default(now())  // Lần gửi kế tiếp — cột query cho cron tick
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  logs          EmailLog[]
+
+  @@index([isActive, nextRunAt])
+}
+
+// ── Email Log (lịch sử gửi báo cáo) ──
+
+model EmailLog {
+  id             String            @id @default(uuid())
+  reportConfig   EmailReportConfig @relation(fields: [reportConfigId], references: [id], onDelete: Cascade)
+  reportConfigId String
+  recipients     String[]                          // Snapshot người nhận lúc gửi
+  subject        String
+  status         String            @default("PENDING") // PENDING | SENT | FAILED
+  error          String?                           // Message lỗi nếu FAILED
+  sentAt         DateTime?
+  payloadSummary Json?                             // Snapshot số liệu chính: { revenue, totalOrders, ... }
+  createdAt      DateTime          @default(now())
+
+  @@index([reportConfigId])
+}

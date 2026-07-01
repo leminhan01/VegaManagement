@@ -520,3 +520,47 @@ export interface PaginatedResponse<T> {
     hasPrev: boolean;
   };
 }
+
+// ── Email Reports (báo cáo định kỳ qua email) ──
+export type EmailReportSection =
+  | "sales"
+  | "top_products"
+  | "order_status"
+  | "payment_methods"
+  | "low_stock"
+  | "expiration";
+
+export interface EmailReportConfig {
+  id: string;
+  name: string;
+  recipients: string[];
+  intervalHours: number;
+  sections: EmailReportSection[];
+  isActive: boolean;
+  lastSentAt: string | null;
+  nextRunAt: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { logs: number };
+}
+
+export type EmailLogStatus = "PENDING" | "SENT" | "FAILED";
+
+export interface EmailLog {
+  id: string;
+  reportConfigId: string;
+  recipients: string[];
+  subject: string;
+  status: EmailLogStatus;
+  error: string | null;
+  sentAt: string | null;
+  payloadSummary: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface EmailReportSendResult {
+  sent: boolean;
+  recipients: string[];
+  summary: Record<string, unknown>;
+}
+

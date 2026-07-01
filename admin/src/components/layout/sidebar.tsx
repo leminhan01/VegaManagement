@@ -70,6 +70,7 @@ const navSections: NavSection[] = [
     label: "Cài đặt",
     items: [
       { label: "Thông tin cửa hàng", icon: "store", href: "/store-info" },
+      { label: "Báo cáo qua email", icon: "mark_email_unread", href: "/email-reports" },
     ],
   },
 ];
