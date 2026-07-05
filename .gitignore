@@ -44,6 +44,7 @@ uploads/
 
 # Docker
 postgres-data/
+docker-compose.override.yml
 
 # Coverage
 coverage/

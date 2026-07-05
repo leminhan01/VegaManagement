@@ -1,65 +1,104 @@
-version: "3.9"
-
+# Modern Compose v2+ — no `version:` field needed.
 services:
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: vegiflow-postgres
-    environment:
-      POSTGRES_DB: veg_shop
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5444:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d veg_shop"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: vegiflow-backend:latest
     container_name: vegiflow-backend
+    env_file: [./backend/.env]
+    environment:
+      - NODE_ENV=production
+      # Containers reach each other by service name on the "vegiflow" network (not localhost)
+      - CHATBOT_SERVICE_URL=http://chatbot:8000
     ports:
       - "3000:3000"
-    env_file: ./backend/.env
-    environment:
-      DATABASE_URL: postgresql://user:password@postgres:5432/veg_shop
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
+    restart: unless-stopped
+    init: true
+    # Containers run ON the VPS — reach the host's Postgres via the docker bridge gateway
+    # instead of hairpinning through the public IP. (DATABASE_URL uses host.docker.internal)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [vegiflow]
 
   admin:
-    build: ./admin
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+      args:
+        # URL the user's BROWSER uses to call the backend — MUST be a public URL, not localhost.
+        # Override via shell env or a root .env when building for a real domain.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://180.93.54.119:3000/api}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-VegiFlow Admin}
+    image: vegiflow-admin:latest
     container_name: vegiflow-admin
+    env_file: [./admin/.env]
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - HOSTNAME=0.0.0.0
     ports:
       - "4000:4000"
-    env_file: ./admin/.env
+    restart: unless-stopped
+    init: true
     depends_on:
-      - backend
+      backend: { condition: service_healthy }
+    networks: [vegiflow]
 
   chatbot:
-    build: ./chatbot
+    build:
+      context: .
+      dockerfile: chatbot/Dockerfile
+    image: vegiflow-chatbot:latest
     container_name: vegiflow-chatbot
+    env_file: [./chatbot/.env]
+    environment:
+      # Containers reach each other by service name on the "vegiflow" network (not localhost)
+      - BACKEND_API_URL=http://backend:3000/api/bot
     ports:
       - "8000:8000"
-    env_file: ./chatbot/.env
-    depends_on:
-      - backend
+    restart: unless-stopped
+    init: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3).status<500 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [vegiflow]
 
   landing:
     build:
-      context: ./landing
+      context: .
+      dockerfile: landing/Dockerfile
       args:
-        PUBLIC_CHATBOT_API_URL: http://localhost:8000
+        PUBLIC_CHATBOT_API_URL: ${PUBLIC_CHATBOT_API_URL:-http://localhost:8000}
+    image: vegiflow-landing:latest
     container_name: vegiflow-landing
     ports:
       - "3001:3001"
-    depends_on:
-      - chatbot
+    restart: unless-stopped
+    depends_on: [chatbot]
+    networks: [vegiflow]
 
-volumes:
-  pgdata:
+networks:
+  vegiflow:
+    driver: bridge

@@ -1,0 +1,44 @@
+# VCS / metadata
+.git
+.gitignore
+.turbo
+**/*.md
+CLAUDE.md
+AGENTS.md
+
+# Dependency installs (regenerated inside image)
+**/node_modules
+
+# Build outputs (regenerated inside image)
+**/dist
+**/.next
+**/.turbo
+**/.astro
+**/coverage
+**/__pycache__
+**/*.pyc
+
+# Secrets: NEVER bake into image (compose injects via env_file at runtime)
+**/.env
+**/.env.*
+!.env.example
+
+# Docker artifacts (not needed inside images)
+**/Dockerfile
+**/.dockerignore
+docker-compose*.yml
+
+# Test sources (not shipped)
+**/*.spec.ts
+**/*.test.ts
+**/*.spec.js
+**/*.test.js
+chatbot/tests
+
+# IDE / OS
+**/.vscode
+**/.idea
+**/.DS_Store
+**/*.log
+**/.npm
+**/.pnpm-debug.log*

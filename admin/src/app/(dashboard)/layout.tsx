@@ -2,6 +2,10 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { Suspense } from "react";
 
+// Các page dashboard dùng useSearchParams() (customers/detail, products/detail, warehouse)
+// → bỏ static prerender để tránh lỗi "Cannot read properties of null (reading 'useContext')".
+export const dynamic = "force-dynamic";
+
 export default function DashboardLayout({
   children,
 }: {
