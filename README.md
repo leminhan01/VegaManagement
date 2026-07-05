@@ -1,146 +1,187 @@
 # 🌿 VegiFlow — Hệ thống quản lý & chatbot cửa hàng thực phẩm chay
 
-Hệ thống gồm 3 service chạy độc lập, giao tiếp qua REST API:
+Monorepo gồm **4 service** chạy độc lập, giao tiếp qua REST API:
 
-| Service | Công nghệ | Port |
-|---------|-----------|------|
-| **Backend API** | NestJS + Prisma ORM + PostgreSQL | 3000 |
-| **Admin Panel** | Next.js 16 + TailwindCSS v4 | 4000 |
-| **Chatbot Service** | Python FastAPI + OpenAI API | 8000 |
+| Service | Công nghệ | Port | Mô tả |
+|---------|-----------|------|-------|
+| **Backend API** | NestJS + Prisma ORM + PostgreSQL | `3000` | Business logic, CRUD, auth, cung cấp data cho Admin & Chatbot |
+| **Admin Panel** | Next.js + TailwindCSS + shadcn/ui | `4000` | Dashboard quản lý cho nhân viên cửa hàng |
+| **Landing Page** | Astro | `3001` | Trang khách hàng — xem sản phẩm, giỏ hàng, đặt hàng |
+| **Chatbot Service** | Python FastAPI + OpenAI API | `8000` | AI tư vấn qua Web widget, Zalo OA, Facebook Messenger (RAG + function calling) |
+
+**Database:** PostgreSQL 16 + **pgvector** (cho semantic search sản phẩm) — chạy trên port `5444`.
 
 ## Kiến trúc
 
 ```
-Zalo/Messenger → Chatbot Service (Python) → Backend API (NestJS) → PostgreSQL
-Admin Panel (Next.js) → Backend API (NestJS) → PostgreSQL
+Khách hàng
+  ├─ Web (Landing)  ───────────┐
+  ├─ Zalo OA ───── webhook ──┐ │
+  └─ Facebook Messenger ───┐ │ │
+                          ▼ ▼ ▼
+                 ┌──────────────────────┐
+                 │  Chatbot (Python)    │  ← OpenAI + pgvector RAG
+                 │  :8000               │
+                 └──────────┬───────────┘
+                            │ HTTP (API Key)
+   ┌────────────────────────┼───────────────────────┐
+   ▼                        ▼                       ▼
+┌─────────────┐    ┌─────────────────┐    ┌──────────────────┐
+│ Landing     │    │  Backend (API)  │    │  Admin Panel     │
+│ Astro :3001 │───▶│  NestJS :3000   │◀───│  Next.js :4000   │
+└─────────────┘    └────────┬────────┘    └──────────────────┘
+                            │ Prisma
+                            ▼
+                   ┌──────────────────┐
+                   │  PostgreSQL 16   │
+                   │  + pgvector :5444│
+                   └──────────────────┘
 ```
 
 ## Quick Start
 
+> Yêu cầu: **Node 20+**, **pnpm 10+**, **Python 3.11+**, **Docker** (chạy PostgreSQL).
+
 ### 0. Setup lần đầu
 
 ```bash
-# Cài dependencies cho cả monorepo
-pnpm install
-
-# Chạy migration + seed database
-pnpm db:migrate
-pnpm db:seed
+pnpm install                 # Cài deps cho cả monorepo
+pnpm setup                   # Generate Prisma client
+docker compose up -d postgres # Khởi động PostgreSQL (pgvector)
+pnpm db:migrate              # Chạy migration
+pnpm db:seed                 # Seed dữ liệu mẫu
 ```
 
-### 1. Chạy tất cả services (Turbo)
+Chatbot cần thư viện Python (uvicorn + fastapi + openai...). Khuyến nghị dùng venv:
 
-```bash
-# Chỉ Backend + Admin (qua Turborepo)
-pnpm dev
-
-# Hoặc TẤT CẢ: PostgreSQL + Backend + Admin + Chatbot
-pnpm dev:all
-```
-
-### 2. Chạy thủ công từng service
-
-**PostgreSQL:**
-```bash
-docker compose up -d postgres
-```
-
-**Backend API:**
-```bash
-cd backend
-cp .env.example .env          # Cấu hình DATABASE_URL, JWT_SECRET, BOT_API_KEY
-pnpm install
-npx prisma migrate dev        # Chạy migration
-npx prisma db seed            # Seed dữ liệu mẫu
-pnpm dev                      # http://localhost:3000
-```
-
-**Admin Panel:**
-```bash
-cd admin
-cp .env.example .env          # Cấu hình NEXT_PUBLIC_API_URL
-pnpm install
-pnpm dev                      # http://localhost:4000
-```
-
-**Chatbot Service:**
 ```bash
 cd chatbot
-cp .env.example .env          # Cấu hình OPENAI_API_KEY, Zalo/Messenger tokens
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn src.main:app --reload --port 8000
+cd ..
 ```
+
+### 1. Chạy tất cả services
+
+```bash
+pnpm dev        # Backend + Admin + Landing + Chatbot (cùng lúc)
+```
+
+> Lệnh này chạy 4 app service song song. PostgreSQL cần đã chạy sẵn
+> (xem `pnpm dev:db`). Muốn khởi động luôn cả database:
+
+```bash
+pnpm dev:all    # PostgreSQL (Docker) + 4 app service
+```
+
+### 2. Chạy từng service riêng
+
+| Lệnh | Service |
+|------|---------|
+| `pnpm dev:backend` | Backend API → http://localhost:3000 |
+| `pnpm dev:admin` | Admin Panel → http://localhost:4000 |
+| `pnpm dev:landing` | Landing Page → http://localhost:3001 |
+| `pnpm dev:chatbot` | Chatbot Service → http://localhost:8000 |
+| `pnpm dev:db` | Chỉ PostgreSQL (Docker) |
 
 ## Các lệnh thường dùng
 
 | Lệnh | Mô tả |
 |------|-------|
-| `pnpm dev` | Chạy Backend + Admin song song (Turborepo) |
-| `pnpm dev:all` | Chạy TẤT CẢ: Postgres + Backend + Admin + Chatbot |
-| `pnpm build` | Build Backend + Admin |
+| `pnpm dev` | Chạy cả 4 app service song song (Turbo + concurrently) |
+| `pnpm dev:all` | Như `pnpm dev` + khởi động PostgreSQL qua Docker |
+| `pnpm build` | Build Backend + Admin + Landing |
+| `pnpm lint` | Lint toàn monorepo |
 | `pnpm db:migrate` | Chạy Prisma migration |
 | `pnpm db:seed` | Seed dữ liệu mẫu |
 | `pnpm db:reset` | Reset database |
 | `pnpm db:studio` | Mở Prisma Studio |
 | `pnpm setup` | Cài deps + generate Prisma client |
-| `pnpm clean` | Xóa build artifacts |
+| `pnpm clean` | Xoá build artifacts (`dist`, `.next`, ...) |
+
+## Cấu trúc thư mục
+
+```
+Chatbot/
+├── backend/      # NestJS API — Auth, Products, Orders, Customers,
+│                 #   Categories, Chat-sessions, Bot-api, Storefront,
+│                 #   Stats, Email-reports, Inventory, Store-branch, Store-config
+├── admin/        # Next.js Admin Panel
+├── landing/      # Astro landing page (storefront khách hàng)
+├── chatbot/      # Python FastAPI — webhooks + RAG embeddings
+├── docker-compose.yml
+├── turbo.json    # Turborepo pipeline (dev, build, lint)
+└── pnpm-workspace.yaml
+```
 
 ## Tài khoản mặc định
 
 | Tài khoản | Mật khẩu | Mô tả |
 |-----------|----------|-------|
-| `admin` | `admin123` | Admin dashboard |
+| `admin` | `admin123` | Đăng nhập Admin Panel |
 
-## API Endpoints
+## Biến môi trường
+
+Mỗi service có `.env.example` riêng — copy thành `.env` và điền giá trị:
+
+| Service | File | Các biến chính |
+|---------|------|----------------|
+| Backend | `backend/.env` | `DATABASE_URL`, `JWT_SECRET`, `BOT_API_KEY` |
+| Admin | `admin/.env` | `NEXT_PUBLIC_API_URL` |
+| Landing | `landing/.env` | API URL của Backend / Chatbot |
+| Chatbot | `chatbot/.env` | `OPENAI_API_KEY`, `BACKEND_API_URL`, `BOT_API_KEY`, tokens Zalo/Messenger |
+
+> `BOT_API_KEY` phải **giống nhau** giữa Backend và Chatbot (xác thực internal API).
+
+## Backend API Endpoints
 
 ### Auth
 - `POST /api/auth/login` — Đăng nhập admin
 - `POST /api/auth/refresh` — Refresh token
 
-### Products (JWT required)
-- `GET /api/products` — Danh sách sản phẩm
-- `GET /api/products/:id` — Chi tiết sản phẩm
-- `POST /api/products` — Tạo mới
-- `PUT /api/products/:id` — Cập nhật
-- `DELETE /api/products/:id` — Xóa mềm
-- `PATCH /api/products/:id/stock` — Cập nhật tồn kho
+### Products / Categories (JWT)
+- `GET|POST|PUT|DELETE /api/products`, `PATCH /api/products/:id/stock`
+- `GET|POST|PUT|DELETE /api/categories`
 
-### Categories (JWT required)
-- `GET /api/categories` — Danh sách danh mục
-- `POST /api/categories` — Tạo mới
-- `PUT /api/categories/:id` — Cập nhật
-- `DELETE /api/categories/:id` — Xóa mềm
+### Orders / Customers (JWT)
+- `GET|POST /api/orders`, `GET /api/orders/:id`, `GET /api/orders/code/:code`, `PATCH /api/orders/:id/status`, `PATCH /api/orders/:id/cancel`
+- `GET /api/customers`, `GET /api/customers/:id`, `GET /api/customers/:id/orders`
 
-### Orders (JWT required)
-- `GET /api/orders` — Danh sách đơn hàng
-- `GET /api/orders/:id` — Chi tiết đơn hàng
-- `GET /api/orders/code/:code` — Tra cứu theo mã đơn
-- `POST /api/orders` — Tạo đơn hàng
-- `PATCH /api/orders/:id/status` — Cập nhật trạng thái
-- `PATCH /api/orders/:id/cancel` — Hủy đơn
-
-### Bot Internal API (API Key required)
-- `GET /api/bot/products` — Tìm kiếm sản phẩm
-- `GET /api/bot/products/:id` — Chi tiết sản phẩm
-- `GET /api/bot/orders/code/:code` — Tra cứu đơn hàng
-- `GET /api/bot/categories` — Danh mục
-- `POST /api/bot/chat-sessions` — Quản lý phiên chat
-
-### Stats
+### Storefront / Stats (JWT)
+- Storefront APIs cho landing page (sản phẩm, giỏ hàng, đặt hàng)
 - `GET /api/stats/dashboard` — Thống kê dashboard
 
-## Chatbot Webhooks
+### Bot Internal API (API Key — chỉ cho Chatbot Service)
+- `GET /api/bot/products`, `/api/bot/products/:id`, `/api/bot/categories`
+- `GET /api/bot/orders/code/:code`
+- `POST /api/bot/chat-sessions`, `POST /api/bot/chat-sessions/:id/messages`
 
-- `GET/POST /webhooks/zalo` — Zalo OA webhook
-- `GET/POST /webhooks/messenger` — Facebook Messenger webhook
+## Chatbot Webhooks & APIs
+
+| Endpoint | Mô tả |
+|----------|-------|
+| `GET/POST /webhooks/web/*` | Web widget chat (landing page) |
+| `GET/POST /webhooks/zalo` | Zalo OA webhook |
+| `GET/POST /webhooks/messenger` | Facebook Messenger webhook |
+| `POST /embeddings/*` | Sync & semantic search sản phẩm (pgvector RAG) |
+| `GET /health` | Health check |
 
 ## Tech Stack
 
 - **NestJS** — TypeScript strict, Prisma ORM, JWT + API Key auth
-- **Next.js 16** — App Router, TailwindCSS v4, TypeScript
-- **Python FastAPI** — OpenAI GPT-4o-mini, function calling
-- **PostgreSQL 16** — Prisma migrations
-- **Turborepo + pnpm** — Monorepo management
-- **Docker Compose** — Development environment
+- **Next.js** — App Router, TailwindCSS, shadcn/ui
+- **Astro** — Landing page storefront
+- **Python FastAPI** — OpenAI GPT-4o-mini, function calling, RAG với pgvector
+- **PostgreSQL 16 + pgvector** — Prisma migrations + vector embeddings
+- **Turborepo + pnpm** — Monorepo management (concurrently cho Chatbot)
+- **Docker Compose** — PostgreSQL & môi trường production
+
+## Docker
+
+```bash
+docker compose up -d          # Chạy tất cả services (postgres, backend, admin, landing, chatbot)
+docker compose up -d postgres # Chỉ PostgreSQL
+docker compose logs -f chatbot
+docker compose down
+```

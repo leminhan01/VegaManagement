@@ -65,7 +65,7 @@ class ChatbotAgent:
             context = session_manager.build_context(history, user_message)
 
             # 4. Call OpenAI with tool loop
-            response_text, products = await self._call_openai(context)
+            response_text, products = await self._call_openai(context, session_id)
 
             # 5. Save assistant message
             await session_manager.save_message(session_id, "ASSISTANT", response_text)
@@ -83,12 +83,17 @@ class ChatbotAgent:
             }
 
     async def _call_openai(
-        self, messages: list[dict[str, Any]]
+        self, messages: list[dict[str, Any]], session_id: str = ""
     ) -> tuple[str, list[dict[str, Any]]]:
         """Call OpenAI API with tool calling loop.
 
         Keeps calling OpenAI until it returns a text response
         (not a tool call), up to MAX_TOOL_LOOPS iterations.
+
+        Args:
+            messages: lịch sử chat + tin nhắn hiện tại (đã build context).
+            session_id: ID phiên chat — truyền xuống execute_tool cho các tool
+                giỏ hàng / đặt hàng (cần biết thao tác trên giỏ của phiên nào).
 
         Returns:
             ``(response_text, products)`` — products thu thập từ kết quả các
@@ -132,7 +137,7 @@ class ChatbotAgent:
                 logger.info(f"Tool call: {function_name}({function_args})")
 
                 # Execute the tool
-                result = await execute_tool(function_name, function_args)
+                result = await execute_tool(function_name, function_args, session_id)
 
                 # Thu thập sản phẩm từ kết quả tool để render Product Card
                 collected_products = _merge_products(

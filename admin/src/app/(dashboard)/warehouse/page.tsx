@@ -545,7 +545,7 @@ function WarehousePageContent() {
           <button
             type="button"
             onClick={() => openMovement("OUT")}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-white px-4 py-2.5 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-white px-5 py-2.5 text-sm font-semibold text-on-surface-variant shadow-sm transition-colors hover:bg-surface-container"
           >
             <span className="material-symbols-outlined text-[20px]">logout</span>
             Xuất kho
@@ -553,7 +553,7 @@ function WarehousePageContent() {
           <button
             type="button"
             onClick={() => openMovement("IN")}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition-all hover:bg-primary/90 active:scale-[0.97]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             Nhập kho mới

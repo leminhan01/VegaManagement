@@ -10,12 +10,17 @@ from ..embeddings.service import embedding_service
 logger = logging.getLogger(__name__)
 
 
-async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
+async def execute_tool(
+    name: str, arguments: dict[str, Any], session_id: str | None = None
+) -> str:
     """Execute a tool call by dispatching to the appropriate backend API method.
 
     Args:
         name: The function name from OpenAI's tool_call.
         arguments: The parsed JSON arguments.
+        session_id: ID phiên chat — bắt buộc cho các tool giỏ hàng / đặt hàng
+            (add_to_cart, view_cart, update_cart_item, remove_from_cart, create_order).
+            Các tool tra cứu khác không cần.
 
     Returns:
         JSON string result for OpenAI to consume.
@@ -73,6 +78,47 @@ async def execute_tool(name: str, arguments: dict[str, Any]) -> str:
                 result = await backend_api.get_store_config_by_key(key)
             else:
                 result = await backend_api.get_full_store_info()
+            return _format_result(result)
+
+        elif name == "add_to_cart":
+            if not session_id:
+                return json.dumps({"error": "Không xác định được phiên chat để thao tác giỏ hàng."})
+            product_id = arguments.get("product_id", "")
+            quantity = arguments.get("quantity", 1)
+            result = await backend_api.add_to_cart(session_id, product_id, quantity)
+            return _format_result(result)
+
+        elif name == "view_cart":
+            if not session_id:
+                return json.dumps({"error": "Không xác định được phiên chat để xem giỏ hàng."})
+            result = await backend_api.get_cart(session_id)
+            return _format_result(result)
+
+        elif name == "update_cart_item":
+            if not session_id:
+                return json.dumps({"error": "Không xác định được phiên chat."})
+            product_id = arguments.get("product_id", "")
+            quantity = arguments.get("quantity", 0)
+            result = await backend_api.update_cart_item(session_id, product_id, quantity)
+            return _format_result(result)
+
+        elif name == "remove_from_cart":
+            if not session_id:
+                return json.dumps({"error": "Không xác định được phiên chat."})
+            product_id = arguments.get("product_id", "")
+            result = await backend_api.remove_from_cart(session_id, product_id)
+            return _format_result(result)
+
+        elif name == "create_order":
+            if not session_id:
+                return json.dumps({"error": "Không xác định được phiên chat để đặt hàng."})
+            result = await backend_api.create_order(
+                session_id,
+                customer_name=arguments.get("customer_name", ""),
+                customer_phone=arguments.get("customer_phone", ""),
+                shipping_address=arguments.get("shipping_address", ""),
+                note=arguments.get("note") or None,
+            )
             return _format_result(result)
 
         else:

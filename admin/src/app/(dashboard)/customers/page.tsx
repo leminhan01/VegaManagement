@@ -399,7 +399,7 @@ export default function CustomersPage() {
         <button
           type="button"
           onClick={openCreateModal}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
         >
           <span className="material-symbols-outlined text-[20px]">person_add</span>
           Thêm khách hàng

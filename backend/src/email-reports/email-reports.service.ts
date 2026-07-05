@@ -3,7 +3,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatsService } from '../stats/stats.service';
 import { OrdersService } from '../orders/orders.service';
-import { MailService } from './mail.service';
+import { MailService } from '../mail/mail.service';
 import {
   buildReportHtml,
   buildReportSubject,

@@ -91,6 +91,65 @@ class BackendApiClient:
         res.raise_for_status()
         return res.json()
 
+    # ── Cart (đặt hàng qua chatbot) ──
+
+    async def add_to_cart(self, session_id: str, product_id: str, quantity: int) -> dict[str, Any]:
+        """POST /bot/cart/items — thêm sản phẩm vào giỏ của phiên chat (cộng dồn SL)."""
+        client = await self._get_client()
+        res = await client.post("/cart/items", json={
+            "sessionId": session_id,
+            "productId": product_id,
+            "quantity": quantity,
+        })
+        res.raise_for_status()
+        return res.json()
+
+    async def get_cart(self, session_id: str) -> dict[str, Any]:
+        """GET /bot/cart?sessionId= — xem giỏ hàng (kèm giá/tồn kho hiện tại)."""
+        client = await self._get_client()
+        res = await client.get("/cart", params={"sessionId": session_id})
+        res.raise_for_status()
+        return res.json()
+
+    async def update_cart_item(self, session_id: str, product_id: str, quantity: int) -> dict[str, Any]:
+        """PUT /bot/cart/items/:productId — đặt lại số lượng (quantity 0 → xóa)."""
+        client = await self._get_client()
+        res = await client.put(f"/cart/items/{product_id}", json={
+            "sessionId": session_id,
+            "quantity": quantity,
+        })
+        res.raise_for_status()
+        return res.json()
+
+    async def remove_from_cart(self, session_id: str, product_id: str) -> dict[str, Any]:
+        """DELETE /bot/cart/items/:productId?sessionId= — xóa sản phẩm khỏi giỏ."""
+        client = await self._get_client()
+        res = await client.delete(f"/cart/items/{product_id}", params={"sessionId": session_id})
+        res.raise_for_status()
+        return res.json()
+
+    async def create_order(
+        self,
+        session_id: str,
+        customer_name: str,
+        customer_phone: str,
+        shipping_address: str,
+        note: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """POST /bot/orders — tạo đơn từ giỏ hàng (COD). Find-or-create customer theo SĐT."""
+        client = await self._get_client()
+        payload: dict[str, Any] = {
+            "sessionId": session_id,
+            "customerName": customer_name,
+            "customerPhone": customer_phone,
+            "shippingAddress": shipping_address,
+        }
+        if note:
+            payload["note"] = note
+        res = await client.post("/orders", json=payload)
+        res.raise_for_status()
+        return res.json()
+
     # ── Chat Sessions ──
 
     async def upsert_session(self, data: dict[str, Any]) -> dict[str, Any]:

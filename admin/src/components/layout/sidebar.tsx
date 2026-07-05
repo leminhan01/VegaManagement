@@ -67,12 +67,17 @@ const navSections: NavSection[] = [
     items: [{ label: "Nhật ký chat", icon: "chat", href: "/chat-logs" }],
   },
   {
-    label: "Cài đặt",
+    label: "Báo cáo",
     items: [
-      { label: "Thông tin cửa hàng", icon: "store", href: "/store-info" },
-      { label: "Báo cáo qua email", icon: "mark_email_unread", href: "/email-reports" },
+      { label: "Báo cáo qua email", icon: "mark_email_unread", href: "/email-reports" }
     ],
   },
+  {
+    label: "Cài đặt",
+    items: [
+      { label: "Thông tin cửa hàng", icon: "store", href: "/store-info" }
+    ],
+  }
 ];
 
 export function Sidebar() {

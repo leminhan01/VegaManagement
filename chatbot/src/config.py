@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
 
     # Database (direct connection for pgvector)
-    DATABASE_URL: str = "postgresql://user:password@localhost:5444/veg_shop"
+    # DATABASE_URL: str = "postgresql://user:password@localhost:5444/veg_shop"
+    DATABASE_URL: str = "postgresql://veg_user:admin123@180.93.54.119:5432/veg_shop"
+   
 
     # NestJS Backend (internal API)
     BACKEND_API_URL: str = "http://localhost:3000/api/bot"

@@ -57,6 +57,35 @@ class GetStoreInfoInput(BaseModel):
     )
 
 
+class AddToCartInput(BaseModel):
+    """Thêm sản phẩm vào giỏ hàng của khách (cộng dồn số lượng nếu đã có)."""
+    product_id: str = Field(description="ID của sản phẩm cần thêm vào giỏ")
+    quantity: int = Field(default=1, ge=1, description="Số lượng cần thêm (phải >= 1)")
+
+
+class ViewCartInput(BaseModel):
+    """Xem giỏ hàng hiện tại của khách (danh sách sản phẩm + tổng tạm tính)."""
+
+
+class UpdateCartItemInput(BaseModel):
+    """Cập nhật số lượng của một sản phẩm trong giỏ. Truyền quantity=0 để xóa sản phẩm."""
+    product_id: str = Field(description="ID của sản phẩm cần thay đổi số lượng")
+    quantity: int = Field(ge=0, description="Số lượng mới. Truyền 0 để xóa sản phẩm khỏi giỏ")
+
+
+class RemoveFromCartInput(BaseModel):
+    """Xóa một sản phẩm khỏi giỏ hàng."""
+    product_id: str = Field(description="ID của sản phẩm cần xóa khỏi giỏ")
+
+
+class CreateOrderInput(BaseModel):
+    """Tạo đơn hàng từ giỏ hàng của khách (thanh toán COD). Chỉ dùng khi khách đã xác nhận đặt."""
+    customer_name: str = Field(description="Họ tên đầy đủ của khách nhận hàng")
+    customer_phone: str = Field(description="Số điện thoại của khách (dùng để find-or-create khách và tra cứu đơn sau này)")
+    shipping_address: str = Field(description="Địa chỉ giao hàng đầy đủ")
+    note: str = Field(default="", description="Ghi chú cho đơn hàng (tuỳ chọn, có thể bỏ trống)")
+
+
 # ── Tool Definitions ──
 
 TOOLS = [
@@ -140,6 +169,61 @@ TOOLS = [
                 "Dùng khi khách hỏi thông tin liên hệ, địa chỉ, chi nhánh gần nhất, hoặc về cửa hàng."
             ),
             "parameters": GetStoreInfoInput.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_to_cart",
+            "description": (
+                "Thêm một sản phẩm vào giỏ hàng của khách với số lượng tương ứng. "
+                "Dùng khi khách muốn mua/đặt/lấy một sản phẩm (VD: 'mua 2 đậu phụ', 'cho vào giỏ 1 nấm'). "
+                "Sau khi thêm, LUÔN gọi view_cart để hiển thị lại giỏ cho khách xác nhận."
+            ),
+            "parameters": AddToCartInput.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "view_cart",
+            "description": (
+                "Xem giỏ hàng hiện tại của khách: danh sách sản phẩm, số lượng, giá và tổng tạm tính. "
+                "Dùng khi khách hỏi 'giỏ hàng', 'tôi đã chọn gì', hoặc sau khi thêm/sửa sản phẩm để xác nhận."
+            ),
+            "parameters": ViewCartInput.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_cart_item",
+            "description": (
+                "Thay đổi số lượng của một sản phẩm trong giỏ. Truyền quantity=0 để xóa sản phẩm đó. "
+                "Dùng khi khách muốn đổi số lượng (VD: 'đổi thành 3 cái') hoặc bớt món."
+            ),
+            "parameters": UpdateCartItemInput.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "remove_from_cart",
+            "description": "Xóa hẳn một sản phẩm khỏi giỏ hàng. Dùng khi khách không muốn mua món đó nữa.",
+            "parameters": RemoveFromCartInput.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_order",
+            "description": (
+                "Tạo đơn hàng từ giỏ hàng của khách (thanh toán khi nhận hàng COD). "
+                "CHỈ gọi tool này sau khi: (1) khách đã XÁC NHẬN đặt toàn bộ giỏ, "
+                "và (2) đã thu thập ĐỦ họ tên + số điện thoại + địa chỉ giao. "
+                "Nếu thiếu thông tin, hãy hỏi khách trước khi gọi. Trả về mã đơn và tổng tiền."
+            ),
+            "parameters": CreateOrderInput.model_json_schema(),
         },
     },
 ]

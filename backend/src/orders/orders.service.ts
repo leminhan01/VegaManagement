@@ -1,10 +1,12 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { OrderStatus, PaymentMethod, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import {
   createPaginatedResult,
   getPaginationParams,
@@ -14,6 +16,10 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { FilterOrdersDto } from './dto/filter-orders.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import {
+  buildOrderConfirmationHtml,
+  buildOrderConfirmationSubject,
+} from './order-mail.helper';
 
 type OrderLine = {
   productId: string;
@@ -36,7 +42,12 @@ const ORDER_INCLUDE = {
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(OrdersService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async findAll(
     filter: FilterOrdersDto,
@@ -237,7 +248,7 @@ export class OrdersService {
   }
 
   async updateStatus(id: string, dto: UpdateStatusDto) {
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id },
         include: { items: true },
@@ -270,6 +281,38 @@ export class OrdersService {
         include: ORDER_INCLUDE,
       });
     });
+
+    // Sau khi xác nhận đơn (nhân viên "lên đơn"), gửi email cho khách nếu có email.
+    // Lỗi SMTP KHÔNG được chặn thao tác xác nhận — chỉ log cảnh báo.
+    if (dto.status === OrderStatus.CONFIRMED) {
+      await this.sendConfirmationEmailIfEligible(updated).catch((err: Error) =>
+        this.logger.warn(
+          `Gửi email xác nhận đơn ${updated.orderCode} thất bại: ${err.message}`,
+        ),
+      );
+    }
+
+    return updated;
+  }
+
+  /**
+   * Gửi email xác nhận đơn nếu khách có email. Không throw.
+   */
+  private async sendConfirmationEmailIfEligible(order: unknown): Promise<void> {
+    const customer = (order as { customer?: { email?: string | null } }).customer;
+    const email = customer?.email;
+    if (!email) return;
+
+    await this.mailService.sendMail({
+      to: [email],
+      subject: buildOrderConfirmationSubject(
+        (order as { orderCode: string }).orderCode,
+      ),
+      html: buildOrderConfirmationHtml(
+        order as Parameters<typeof buildOrderConfirmationHtml>[0],
+      ),
+    });
+    this.logger.log(`Đã gửi email xác nhận đơn đến ${email}`);
   }
 
   async cancel(id: string) {

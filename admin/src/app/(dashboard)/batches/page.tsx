@@ -176,7 +176,7 @@ export default function BatchesPage() {
         <button
           type="button"
           onClick={() => setFormOpen(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
         >
           <span className="material-symbols-outlined text-[20px]">add</span>
           Thêm lô hàng

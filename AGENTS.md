@@ -571,7 +571,8 @@ PORT=3000
 NODE_ENV=development
 
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/veg_shop
+<!-- DATABASE_URL=postgresql://user:password@localhost:5432/veg_shop -->
+DATABASE_URL=postgresql://veg_user:admin123@180.93.54.119:5432/veg_shop
 
 # JWT
 JWT_SECRET=your-jwt-secret

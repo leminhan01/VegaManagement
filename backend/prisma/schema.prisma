@@ -430,6 +430,7 @@ model ChatSession {
   platform        ChatPlatform
   platformUserId  String
   guestPhone      String?
+  cart            Json?         // Giỏ hàng tạm cho đặt hàng qua chatbot: [{ productId, quantity }]
   messages        ChatMessage[]
   isActive        Boolean       @default(true)
   createdAt       DateTime      @default(now())

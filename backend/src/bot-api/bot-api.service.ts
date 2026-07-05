@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PaymentMethod } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { OrdersService } from '../orders/orders.service';
 import {
   getPaginationParams,
   createPaginatedResult,
@@ -13,6 +21,10 @@ import {
   UpsertSessionDto,
   CreateMessageDto,
 } from './dto/search-products.dto';
+import {
+  AddCartItemDto,
+  BotCreateOrderDto,
+} from './dto/cart.dto';
 
 @Injectable()
 export class BotApiService {
@@ -22,6 +34,7 @@ export class BotApiService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly ordersService: OrdersService,
   ) {
     // Chatbot service URL for embedding calls
     this.chatbotUrl = this.configService.get<string>('CHATBOT_SERVICE_URL', 'http://localhost:8000');
@@ -375,4 +388,228 @@ export class BotApiService {
       },
     });
   }
+
+  // ── Cart (đặt hàng qua chatbot) ───────────────────────────
+  // Cart lưu trong ChatSession.cart (Json) dạng [{ productId, quantity }].
+
+  private parseCart(raw: unknown): CartLine[] {
+    if (!Array.isArray(raw)) return [];
+    const lines: CartLine[] = [];
+    for (const item of raw) {
+      if (
+        item &&
+        typeof item === 'object' &&
+        typeof (item as CartLine).productId === 'string' &&
+        typeof (item as CartLine).quantity === 'number'
+      ) {
+        lines.push({
+          productId: (item as CartLine).productId,
+          quantity: (item as CartLine).quantity,
+        });
+      }
+    }
+    return lines;
+  }
+
+  private async getSessionOrThrow(sessionId: string) {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId },
+    });
+    if (!session) {
+      throw new NotFoundException(
+        `Không tìm thấy phiên chat với ID "${sessionId}"`,
+      );
+    }
+    return session;
+  }
+
+  async viewCart(sessionId: string) {
+    const session = await this.getSessionOrThrow(sessionId);
+    const cart = this.parseCart(session.cart);
+    if (!cart.length) {
+      return { items: [], total: 0, count: 0 };
+    }
+
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: cart.map((c) => c.productId) } },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        salePrice: true,
+        stock: true,
+        unit: true,
+        images: true,
+        isActive: true,
+        isPublished: true,
+      },
+    });
+    const productMap = new Map(products.map((p) => [p.id, p]));
+
+    let total = 0;
+    const items = cart.map((line) => {
+      const product = productMap.get(line.productId);
+      const unitPrice = product ? product.salePrice ?? product.price : 0;
+      const lineTotal = unitPrice * line.quantity;
+      total += lineTotal;
+      const images = product?.images ?? [];
+      return {
+        productId: line.productId,
+        name: product?.name ?? null,
+        quantity: line.quantity,
+        unitPrice,
+        lineTotal,
+        stock: product?.stock ?? 0,
+        unit: product?.unit ?? null,
+        image: Array.isArray(images) && images.length ? images[0] : null,
+        // Còn mua được không (sản phẩm active + đủ stock)
+        available: !!product && product.isActive && product.isPublished && product.stock >= line.quantity,
+      };
+    });
+
+    return { items, total, count: items.length };
+  }
+
+  async addCartItem(sessionId: string, productId: string, quantity: number) {
+    if (quantity <= 0) {
+      throw new BadRequestException('Số lượng phải lớn hơn 0');
+    }
+    const session = await this.getSessionOrThrow(sessionId);
+
+    // Chỉ cho thêm sản phẩm đang bán (active + published)
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, isActive: true, isPublished: true },
+      select: { id: true, name: true, stock: true },
+    });
+    if (!product) {
+      throw new NotFoundException(
+        `Không tìm thấy sản phẩm với ID "${productId}"`,
+      );
+    }
+
+    const cart = this.parseCart(session.cart);
+    const existing = cart.find((c) => c.productId === productId);
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      cart.push({ productId, quantity });
+    }
+    await this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { cart },
+    });
+
+    return {
+      product: { id: product.id, name: product.name, stock: product.stock },
+      addedQuantity: quantity,
+      cart: await this.viewCart(sessionId),
+    };
+  }
+
+  async updateCartItem(sessionId: string, productId: string, quantity: number) {
+    const session = await this.getSessionOrThrow(sessionId);
+    const cart = this.parseCart(session.cart);
+    const idx = cart.findIndex((c) => c.productId === productId);
+    if (idx === -1) {
+      throw new NotFoundException('Sản phẩm không có trong giỏ hàng');
+    }
+    if (quantity <= 0) {
+      cart.splice(idx, 1);
+    } else {
+      cart[idx].quantity = quantity;
+    }
+    await this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { cart },
+    });
+    return this.viewCart(sessionId);
+  }
+
+  async removeCartItem(sessionId: string, productId: string) {
+    const session = await this.getSessionOrThrow(sessionId);
+    const cart = this.parseCart(session.cart).filter(
+      (c) => c.productId !== productId,
+    );
+    await this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { cart },
+    });
+    return this.viewCart(sessionId);
+  }
+
+  async clearCart(sessionId: string) {
+    await this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { cart: Prisma.JsonNull },
+    });
+  }
+
+  /**
+   * Tạo đơn hàng từ giỏ hàng của phiên chat (chatbot checkout).
+   * - Find-or-create Customer theo SĐT (source CHATBOT).
+   * - Link ChatSession.customerId.
+   * - Reuse OrdersService.createWithCustomerId (tự validate stock, trừ stock,
+   *   gen mã đơn, tính tiền). Payment COD.
+   * - Clear giỏ sau khi đặt thành công.
+   */
+  async createOrder(dto: BotCreateOrderDto) {
+    const session = await this.getSessionOrThrow(dto.sessionId);
+    const cart = this.parseCart(session.cart);
+    if (!cart.length) {
+      throw new BadRequestException(
+        'Giỏ hàng đang trống, không thể đặt hàng',
+      );
+    }
+
+    // Find-or-create customer theo số điện thoại
+    const customer = await this.findOrCreateCustomer(
+      dto.customerPhone,
+      dto.customerName,
+    );
+
+    // Link phiên chat với customer (lần sau bot biết khách này là ai)
+    await this.prisma.chatSession.update({
+      where: { id: dto.sessionId },
+      data: { customerId: customer.id, guestPhone: dto.customerPhone },
+    });
+
+    // Reuse logic tạo đơn chung (validate stock, trừ stock, gen mã, tính tiền)
+    const order = await this.ordersService.createWithCustomerId(customer.id, {
+      items: cart,
+      shippingAddress: dto.shippingAddress,
+      shippingPhone: dto.customerPhone,
+      paymentMethod: PaymentMethod.COD,
+      note: dto.note,
+    });
+
+    // Xóa giỏ sau khi đặt thành công
+    await this.clearCart(dto.sessionId);
+
+    return {
+      orderCode: order.orderCode,
+      finalAmount: order.finalAmount,
+      totalAmount: order.totalAmount,
+      customerName: customer.name,
+      items: order.items.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+    };
+  }
+
+  private async findOrCreateCustomer(phone: string, name: string) {
+    const existing = await this.prisma.customer.findUnique({
+      where: { phone },
+    });
+    if (existing) return existing;
+    return this.prisma.customer.create({
+      data: { name, phone, source: 'CHATBOT' },
+    });
+  }
 }
+
+type CartLine = {
+  productId: string;
+  quantity: number;
+};

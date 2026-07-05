@@ -462,7 +462,7 @@ export default function ProductsPage() {
           <button
             type="button"
             onClick={() => setImportOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-primary px-5 py-2.5 text-sm font-semibold text-primary shadow-sm transition-all hover:bg-primary/5 hover:shadow-md active:scale-[0.97]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-primary px-5 py-2.5 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-primary/5"
           >
             <span className="material-symbols-outlined text-[20px]">upload_file</span>
             Nhập từ Excel
@@ -470,7 +470,7 @@ export default function ProductsPage() {
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition-all hover:bg-primary/90 hover:shadow-md active:scale-[0.97]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             Thêm sản phẩm

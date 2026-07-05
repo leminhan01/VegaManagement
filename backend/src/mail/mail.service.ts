@@ -9,8 +9,12 @@ export interface SendMailInput {
 }
 
 /**
- * Wrapper quanh nodemailer — tạo transporter Gmail SMTP từ env, verify kết nối
- * khi khởi động, và cung cấp sendMail() cho EmailReportsService.
+ * Wrapper quanh nodemailer — tạo transporter SMTP từ env, verify kết nối
+ * khi khởi động, và cung cấp sendMail() dùng chung cho toàn app (email report,
+ * xác nhận đơn hàng, ...).
+ *
+ * Tách ra module riêng (không phụ thuộc OrdersModule) để OrdersModule và
+ * EmailReportsModule cùng import được mà không gây circular dependency.
  */
 @Injectable()
 export class MailService implements OnModuleInit {

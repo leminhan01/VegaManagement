@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Param,
   Query,
   Body,
@@ -18,6 +20,12 @@ import {
   UpsertSessionDto,
   CreateMessageDto,
 } from './dto/search-products.dto';
+import {
+  AddCartItemDto,
+  UpdateCartItemDto,
+  BotCreateOrderDto,
+  SessionQueryDto,
+} from './dto/cart.dto';
 
 @Public()
 @UseGuards(BotApiGuard)
@@ -82,6 +90,40 @@ export class BotApiController {
   @Get('orders/code/:code')
   getOrderByCode(@Param('code') code: string) {
     return this.botApiService.getOrderByCode(code);
+  }
+
+  // Tạo đơn từ giỏ hàng của phiên chat (chatbot checkout) — COD
+  @Post('orders')
+  createOrder(@Body() dto: BotCreateOrderDto) {
+    return this.botApiService.createOrder(dto);
+  }
+
+  // ── Cart (đặt hàng qua chatbot) ───────────────────────────
+
+  @Get('cart')
+  viewCart(@Query() query: SessionQueryDto) {
+    return this.botApiService.viewCart(query.sessionId);
+  }
+
+  @Post('cart/items')
+  addCartItem(@Body() dto: AddCartItemDto) {
+    return this.botApiService.addCartItem(dto.sessionId, dto.productId, dto.quantity);
+  }
+
+  @Put('cart/items/:productId')
+  updateCartItem(
+    @Param('productId') productId: string,
+    @Body() dto: UpdateCartItemDto,
+  ) {
+    return this.botApiService.updateCartItem(dto.sessionId, productId, dto.quantity);
+  }
+
+  @Delete('cart/items/:productId')
+  removeCartItem(
+    @Param('productId') productId: string,
+    @Query() query: SessionQueryDto,
+  ) {
+    return this.botApiService.removeCartItem(query.sessionId, productId);
   }
 
   // ── Customers ─────────────────────────────────────────────

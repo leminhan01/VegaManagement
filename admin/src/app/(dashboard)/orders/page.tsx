@@ -525,7 +525,7 @@ export default function OrdersPage() {
           <button
             type="button"
             onClick={openReport}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-white px-5 py-3 font-semibold text-on-surface-variant transition-colors hover:bg-surface-container"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-white px-5 py-2.5 text-sm font-semibold text-on-surface-variant shadow-sm transition-colors hover:bg-surface-container"
           >
             <span className="material-symbols-outlined text-[20px]">analytics</span>
             Báo cáo
@@ -533,7 +533,7 @@ export default function OrdersPage() {
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             Tạo đơn hàng
