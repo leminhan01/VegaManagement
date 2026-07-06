@@ -1,0 +1,301 @@
+# name: Build and Push Docker Images
+
+# on:
+#   push:
+#     branches: [main]
+#   workflow_dispatch:        # cho phép chạy thủ công từ tab Actions
+
+# permissions:
+#   contents: read
+#   packages: write           # ghi image vào GHCR
+
+# # Hủy build cũ nếu push liên tục → tiết kiệm phút CI
+# concurrency:
+#   group: ci-${{ github.ref }}
+#   cancel-in-progress: true
+
+# jobs:
+#   # ===========================================================================
+#   # BUILD: song song 4 service, push lên GHCR với tag :latest + :sha-xxxxxxx
+#   # ===========================================================================
+#   build:
+#     runs-on: ubuntu-latest
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         service: [backend, chatbot, admin, landing]
+#         include:
+#           # Public URLs được nhúng vào bundle lúc build (chỉ admin & landing cần).
+#           # Default là subdomain đề xuất; override qua GitHub repo Variables nếu đổi.
+#           - service: admin
+#             build_args: |
+#               NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://api.lmnhan.io.vn/api' }}
+#           - service: landing
+#             build_args: |
+#               PUBLIC_CHATBOT_API_URL=${{ vars.PUBLIC_CHATBOT_API_URL || 'https://bot.lmnhan.io.vn' }}
+#               PUBLIC_STOREFRONT_API_URL=${{ vars.PUBLIC_STOREFRONT_API_URL || 'https://api.lmnhan.io.vn/api' }}
+#     steps:
+#       - name: Checkout source
+#         uses: actions/checkout@v4
+
+#       - name: Setup Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+
+#       - name: Login to GHCR
+#         uses: docker/login-action@v3
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GITHUB_TOKEN }}    # token tự có, không cần tạo
+
+#       - name: Extract metadata (tags, labels)
+#         id: meta
+#         uses: docker/metadata-action@v5
+#         with:
+#           images: ghcr.io/leminhan01/vegiflow-${{ matrix.service }}
+#           tags: |
+#             type=raw,value=latest
+#             type=sha,format=short
+
+#       - name: Build and Push
+#         uses: docker/build-push-action@v6
+#         with:
+#           context: .
+#           file: ./${{ matrix.service }}/Dockerfile
+#           push: true
+#           tags: ${{ steps.meta.outputs.tags }}
+#           labels: ${{ steps.meta.outputs.labels }}
+#           build-args: ${{ matrix.build_args }}
+#           cache-from: type=gha
+#           cache-to: type=gha,mode=max
+
+#   # ===========================================================================
+#   # DEPLOY: sau khi 4 image lên GHCR, copy compose sang VPS rồi pull & up.
+#   # Cần setup GitHub Secrets (xem DEPLOY.md): VPS_HOST, VPS_USER, VPS_SSH_KEY,
+#   # VPS_PORT, VPS_PATH. Nếu image private: thêm GHCR_PAT + GHCR_USER.
+#   # ===========================================================================
+#   deploy:
+#     needs: build
+#     runs-on: ubuntu-latest
+#     environment: production        # có thể thêm approval / protection rules
+#     steps:
+#       - name: Checkout source
+#         uses: actions/checkout@v4
+
+#       - name: Copy prod compose to VPS
+#         uses: appleboy/scp-action@v0.1.7
+#         with:
+#           host: ${{ secrets.VPS_HOST }}
+#           username: ${{ secrets.VPS_USER }}
+#           key: ${{ secrets.VPS_SSH_KEY }}
+#           port: ${{ secrets.VPS_PORT || '22' }}
+#           source: docker-compose.prod.yml
+#           target: ${{ secrets.VPS_PATH }}
+#           overwrite: true
+
+#       - name: SSH — pull images and restart stack
+#         uses: appleboy/ssh-action@v1
+#         env:
+#           GHCR_PAT: ${{ secrets.GHCR_PAT }}
+#           GHCR_USER: ${{ secrets.GHCR_USER }}
+#           COMPOSE_PATH: ${{ secrets.VPS_PATH }}
+#           IMAGE_TAG: ${{ github.sha }}
+#         with:
+#           host: ${{ secrets.VPS_HOST }}
+#           username: ${{ secrets.VPS_USER }}
+#           key: ${{ secrets.VPS_SSH_KEY }}
+#           port: ${{ secrets.VPS_PORT || '22' }}
+#           envs: GHCR_PAT,GHCR_USER,COMPOSE_PATH,IMAGE_TAG
+#           script: |
+#             set -e
+#             cd "$COMPOSE_PATH"
+#             # Chỉ login GHCR nếu có PAT (image private). Image public thì bỏ qua.
+#             if [ -n "$GHCR_PAT" ]; then
+#               echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+#             fi
+#             # Tag theo short commit sha (rollback dễ); mặc định compose dùng :latest
+#             export IMAGE_TAG="${IMAGE_TAG:0:7}"
+#             docker compose -f docker-compose.prod.yml pull
+#             docker compose -f docker-compose.prod.yml up -d --remove-orphans
+#             docker image prune -f
+#             echo "✅ Deployed tag=sha-$IMAGE_TAG (compose dùng :latest)"
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - backend
+          - chatbot
+          - admin
+          - landing
+
+        include:
+          - service: admin
+            build_args: |
+              NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://api.lmnhan.io.vn/api' }}
+
+          - service: landing
+            build_args: |
+              PUBLIC_CHATBOT_API_URL=${{ vars.PUBLIC_CHATBOT_API_URL || 'https://bot.lmnhan.io.vn' }}
+              PUBLIC_STOREFRONT_API_URL=${{ vars.PUBLIC_STOREFRONT_API_URL || 'https://api.lmnhan.io.vn/api' }}
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/leminhan01/vegiflow-${{ matrix.service }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build & Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./${{ matrix.service }}/Dockerfile
+
+          push: true
+
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+          build-args: ${{ matrix.build_args }}
+
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+
+  deploy:
+    name: Deploy VPS
+
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    environment: production
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Copy compose
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: docker-compose.prod.yml
+          target: ${{ secrets.VPS_PATH }}
+          overwrite: true
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1
+
+        env:
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          COMPOSE_PATH: ${{ secrets.VPS_PATH }}
+          GITHUB_SHA: ${{ github.sha }}
+
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+
+          envs: GHCR_USER,GHCR_PAT,COMPOSE_PATH,GITHUB_SHA
+
+          script: |
+
+            set -e
+
+            cd "$COMPOSE_PATH"
+
+            echo "$GHCR_PAT" | docker login ghcr.io \
+              -u "$GHCR_USER" \
+              --password-stdin
+            SHORT_SHA="sha-${GITHUB_SHA:0:7}"
+
+            cat > .env <<EOF
+            IMAGE_REGISTRY=${{ vars.IMAGE_REGISTRY }}
+            IMAGE_TAG=$SHORT_SHA
+            EOF
+
+            docker compose -f docker-compose.prod.yml pull
+
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            echo "Waiting for services..."
+
+            sleep 15
+
+            docker compose -f docker-compose.prod.yml ps
+
+            BACKEND_ID=$(docker compose ps -q backend)
+
+            if [ -n "$BACKEND_ID" ]; then
+              STATUS=$(docker inspect \
+                --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+                "$BACKEND_ID")
+
+              echo "Backend health: $STATUS"
+
+              if [ "$STATUS" = "unhealthy" ]; then
+                docker compose logs backend
+                exit 1
+              fi
+            fi
+
+            CHATBOT_ID=$(docker compose ps -q chatbot)
+
+            if [ -n "$CHATBOT_ID" ]; then
+              STATUS=$(docker inspect \
+                --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+                "$CHATBOT_ID")
+
+              echo "Chatbot health: $STATUS"
+
+              if [ "$STATUS" = "unhealthy" ]; then
+                docker compose logs chatbot
+                exit 1
+              fi
+            fi
+
+            docker image prune -af
+
+            echo ""
+            echo "======================================"
+            echo "Deploy Success"
+            echo "Image Tag : $SHORT_SHA"
+            echo "======================================"
