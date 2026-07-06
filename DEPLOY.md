@@ -17,7 +17,7 @@ Pipeline (`.github/workflows/build.yml`):
 | `api.lmnhan.io.vn`     | backend API  | `http://backend:3000`   |
 | `admin.lmnhan.io.vn`   | admin panel  | `http://admin:4000`     |
 | `bot.lmnhan.io.vn`     | chatbot      | `http://chatbot:8000`   |
-| `lmnshop.lmnhan.io.vn` | landing      | `http://landing:80`     |
+| `lmnshop.lmnhan.io.vn` | landing      | `http://landing:3001`   |
 
 Tất cả qua **Nginx Proxy Manager** (NPM) — terminate SSL (Let's Encrypt) rồi route
 tới tên container trong network `proxy` chung.
@@ -144,7 +144,7 @@ tạo **Proxy Host** cho mỗi subdomain:
 | `api.lmnhan.io.vn`     | `backend`   | 3000 | Request SSL (Let's Encrypt) |
 | `admin.lmnhan.io.vn`   | `admin`     | 4000 | Request SSL |
 | `bot.lmnhan.io.vn`     | `chatbot`   | 8000 | Request SSL |
-| `lmnshop.lmnhan.io.vn` | `landing`   | 80   | Request SSL |
+| `lmnshop.lmnhan.io.vn` | `landing`   | 3001 | Request SSL |
 
 > Forward Hostname = **tên container** (chỉ hoạt động nếu cả NPM và app cùng
 > network `proxy`). Bật "Block Common Exploits" + "Websockets Support".
