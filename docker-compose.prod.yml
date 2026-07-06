@@ -33,7 +33,7 @@ services:
   admin:
     image: ${IMAGE_REGISTRY:-ghcr.io/leminhan01}/vegiflow-admin:${IMAGE_TAG:-latest}
     container_name: vegiflow-admin
-    env_file: [./admin/.env]
+    # Không cần env_file — NEXT_PUBLIC_* đã được nhúng vào image lúc build (build-args).
     environment:
       - NODE_ENV=production
       - PORT=4000
