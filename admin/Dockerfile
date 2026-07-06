@@ -44,10 +44,11 @@ ENV NODE_ENV=production PORT=4000 HOSTNAME=0.0.0.0
 WORKDIR /app
 
 # Next 16 standalone preserves the workspace-relative path, so server.js lives at
-# admin/server.js (not /app/server.js). Static + public resolve relative to cwd (/app).
+# admin/server.js and resolves .next/static relative to ITS dir (__dirname = /app/admin).
+# Static + public must sit next to server.js inside admin/, not at /app root.
 COPY --from=build /repo/admin/.next/standalone ./
-COPY --from=build /repo/admin/.next/static ./.next/static
-COPY --from=build /repo/admin/public ./public
+COPY --from=build /repo/admin/.next/static ./admin/.next/static
+COPY --from=build /repo/admin/public ./admin/public
 
 EXPOSE 4000
 CMD ["node", "admin/server.js"]
