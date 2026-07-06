@@ -6,9 +6,18 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS cho Admin Panel, Chatbot Service và Landing (storefront)
+  // CORS cho Admin Panel, Chatbot Service và Landing (storefront).
+  // Override qua env CORS_ORIGINS (comma-separated) nếu đổi domain.
+  const corsOrigins = (
+    process.env.CORS_ORIGINS ??
+    'https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn,http://localhost:4000,http://localhost:8000,http://localhost:3001'
+  )
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: ['http://localhost:4000', 'http://localhost:8000', 'http://localhost:3001'],
+    origin: corsOrigins,
     credentials: true,
   });
 
