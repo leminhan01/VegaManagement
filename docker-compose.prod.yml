@@ -1,0 +1,79 @@
+# =============================================================================
+# PRODUCTION compose — dùng image từ GHCR (không build).
+# Chạy trên VPS: `docker compose -f docker-compose.prod.yml pull && ... up -d`
+#
+# Networking: container join 2 network:
+#   - `proxy` (external): Nginx Proxy Manager cũng ở network này, route subdomain
+#     tới tên container (VD: admin.lmnhan.io.vn -> http://admin:4000).
+#   - `vegiflow`: nội bộ, cho backend<->chatbot gọi nhau theo service name.
+# Tạo network `proxy` 1 lần: `docker network create proxy`
+# Image tag override qua env IMAGE_TAG (mặc định :latest).
+# =============================================================================
+
+services:
+  backend:
+    # image: ${IMAGE_REGISTRY:-ghcr.io/leminhan01}/vegiflow-backend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY}/vegiflow-backend:${IMAGE_TAG}
+    container_name: vegiflow-backend
+    env_file: [./backend/.env]
+    environment:
+      - NODE_ENV=production
+      # Container gọi nhau qua service name trong network `vegiflow`
+      - CHATBOT_SERVICE_URL=http://chatbot:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Postgres chạy trên host VPS
+    volumes:
+      - ./backend/uploads:/app/uploads
+    restart: unless-stopped
+    init: true
+    networks: [vegiflow, proxy]
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  admin:
+    image: ${IMAGE_REGISTRY:-ghcr.io/leminhan01}/vegiflow-admin:${IMAGE_TAG:-latest}
+    container_name: vegiflow-admin
+    env_file: [./admin/.env]
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+    init: true
+    depends_on:
+      backend: { condition: service_healthy }
+    networks: [proxy]
+
+  chatbot:
+    image: ${IMAGE_REGISTRY:-ghcr.io/leminhan01}/vegiflow-chatbot:${IMAGE_TAG:-latest}
+    container_name: vegiflow-chatbot
+    env_file: [./chatbot/.env]
+    environment:
+      - BACKEND_API_URL=http://backend:3000/api/bot
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    init: true
+    networks: [vegiflow, proxy]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3).status<500 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  landing:
+    image: ${IMAGE_REGISTRY:-ghcr.io/leminhan01}/vegiflow-landing:${IMAGE_TAG:-latest}
+    container_name: vegiflow-landing
+    restart: unless-stopped
+    networks: [proxy]
+
+networks:
+  vegiflow:
+    driver: bridge
+  proxy:
+    external: true       # tạo bằng: docker network create proxy

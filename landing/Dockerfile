@@ -17,8 +17,11 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
 COPY landing/ ./landing/
+# Public URLs are baked into the static build at compile time (read via import.meta.env).
 ARG PUBLIC_CHATBOT_API_URL=http://localhost:8000
-ENV PUBLIC_CHATBOT_API_URL=$PUBLIC_CHATBOT_API_URL
+ARG PUBLIC_STOREFRONT_API_URL=http://localhost:3000/api
+ENV PUBLIC_CHATBOT_API_URL=$PUBLIC_CHATBOT_API_URL \
+    PUBLIC_STOREFRONT_API_URL=$PUBLIC_STOREFRONT_API_URL
 RUN pnpm --filter landing build          # Astro emits -> landing/dist
 
 # ============ Stage 2: serve ============
