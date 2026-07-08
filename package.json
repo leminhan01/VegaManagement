@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "concurrently -n \"workspace,chatbot\" -c \"green,magenta\" \"turbo dev\" \"pnpm dev:chatbot\"",
     "build": "turbo build",
-    "dev:db": "docker compose up -d postgres",
-    "dev:all": "concurrently -n postgres,backend,admin,landing,chatbot -c blue,green,cyan,yellow,magenta \"docker compose up postgres\" \"pnpm dev:backend\" \"pnpm dev:admin\" \"pnpm dev:landing\" \"pnpm dev:chatbot\"",
+    "dev:db": "node -e \"console.log('Dev uses remote PostgreSQL from DATABASE_URL; no local DB container is started.')\"",
+    "dev:all": "concurrently -n backend,admin,landing,chatbot -c green,cyan,yellow,magenta \"pnpm dev:backend\" \"pnpm dev:admin\" \"pnpm dev:landing\" \"pnpm dev:chatbot\"",
     "dev:backend": "pnpm --filter backend dev",
     "dev:admin": "pnpm --filter admin dev --port 4000",
     "dev:chatbot": "cd chatbot && uvicorn src.main:app --reload --port 8000",
