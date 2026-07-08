@@ -70,7 +70,8 @@
   async function api(path, opts) {
     opts = opts || {};
     var headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
-    if (auth.token) headers['Authorization'] = 'Bearer ' + auth.token;
+    var shouldAttachAuth = opts.auth !== false;
+    if (shouldAttachAuth && auth.token) headers['Authorization'] = 'Bearer ' + auth.token;
 
     var res = await fetch(API_BASE + path, {
       method: opts.method || 'GET',
@@ -78,7 +79,7 @@
       body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
 
-    if (res.status === 401 && auth.token && !opts._retried) {
+    if (res.status === 401 && shouldAttachAuth && auth.token && !opts._retried) {
       var refreshed = await tryRefresh();
       if (refreshed) {
         opts._retried = true;
@@ -187,7 +188,7 @@
   // ── Data loading ───────────────────────────────
   async function loadCategories() {
     try {
-      var json = await api('/categories');
+      var json = await api('/categories', { auth: false });
       categories = json.data || [];
     } catch (e) { categories = []; }
     renderChips();
@@ -204,7 +205,7 @@
       });
       if (searchQuery) params.set('search', searchQuery);
       if (activeCategory) params.set('categoryId', activeCategory);
-      var json = await api('/products?' + params.toString());
+      var json = await api('/products?' + params.toString(), { auth: false });
       products = json.data || [];
       applyMeta(json.meta);
       renderProducts();
@@ -366,7 +367,7 @@
       if (body) body.innerHTML = '<p class="vf-s-detail-loading">Đang tải...</p>';
       openDetailModal();
       try {
-        var json = await api('/products/' + encodeURIComponent(slug));
+        var json = await api('/products/' + encodeURIComponent(slug), { auth: false });
         p = json.data || json;
       } catch (e) {
         if (body) body.innerHTML = '<p class="vf-s-detail-loading">Không tải được thông tin sản phẩm.</p>';
@@ -658,6 +659,7 @@
     try {
       var json = await api('/auth/login', {
         method: 'POST',
+        auth: false,
         body: { phone: form.phone.value.trim(), password: form.password.value },
       });
       setAuth(json.data);
@@ -674,6 +676,7 @@
     try {
       var json = await api('/auth/register', {
         method: 'POST',
+        auth: false,
         body: { phone: form.phone.value.trim(), password: form.password.value, name: form.name.value.trim() },
       });
       setAuth(json.data);

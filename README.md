@@ -9,7 +9,7 @@ Monorepo gồm **4 service** chạy độc lập, giao tiếp qua REST API:
 | **Landing Page** | Astro | `3001` | Trang khách hàng — xem sản phẩm, giỏ hàng, đặt hàng |
 | **Chatbot Service** | Python FastAPI + OpenAI API | `8000` | AI tư vấn qua Web widget, Zalo OA, Facebook Messenger (RAG + function calling) |
 
-**Database:** PostgreSQL 16 + **pgvector** (cho semantic search sản phẩm) — chạy trên port `5444`.
+**Database:** PostgreSQL 16 + **pgvector** (cho semantic search sản phẩm) — dev dùng DB remote theo `DATABASE_URL`.
 
 ## Kiến trúc
 
@@ -34,20 +34,19 @@ Khách hàng
                             ▼
                    ┌──────────────────┐
                    │  PostgreSQL 16   │
-                   │  + pgvector :5444│
+                   │  + pgvector      │
                    └──────────────────┘
 ```
 
 ## Quick Start
 
-> Yêu cầu: **Node 20+**, **pnpm 10+**, **Python 3.11+**, **Docker** (chạy PostgreSQL).
+> Yêu cầu: **Node 20+**, **pnpm 10+**, **Python 3.11+**.
 
 ### 0. Setup lần đầu
 
 ```bash
 pnpm install                 # Cài deps cho cả monorepo
 pnpm setup                   # Generate Prisma client
-docker compose up -d postgres # Khởi động PostgreSQL (pgvector)
 pnpm db:migrate              # Chạy migration
 pnpm db:seed                 # Seed dữ liệu mẫu
 ```
@@ -68,11 +67,10 @@ cd ..
 pnpm dev        # Backend + Admin + Landing + Chatbot (cùng lúc)
 ```
 
-> Lệnh này chạy 4 app service song song. PostgreSQL cần đã chạy sẵn
-> (xem `pnpm dev:db`). Muốn khởi động luôn cả database:
+> Lệnh này chạy 4 app service song song và dùng PostgreSQL remote theo `DATABASE_URL`.
 
 ```bash
-pnpm dev:all    # PostgreSQL (Docker) + 4 app service
+pnpm dev:all    # 4 app service, dùng DB remote trong .env
 ```
 
 ### 2. Chạy từng service riêng
@@ -83,14 +81,14 @@ pnpm dev:all    # PostgreSQL (Docker) + 4 app service
 | `pnpm dev:admin` | Admin Panel → http://localhost:4000 |
 | `pnpm dev:landing` | Landing Page → http://localhost:3001 |
 | `pnpm dev:chatbot` | Chatbot Service → http://localhost:8000 |
-| `pnpm dev:db` | Chỉ PostgreSQL (Docker) |
+| `pnpm dev:db` | In ghi chú DB remote dev |
 
 ## Các lệnh thường dùng
 
 | Lệnh | Mô tả |
 |------|-------|
 | `pnpm dev` | Chạy cả 4 app service song song (Turbo + concurrently) |
-| `pnpm dev:all` | Như `pnpm dev` + khởi động PostgreSQL qua Docker |
+| `pnpm dev:all` | Như `pnpm dev`, dùng DB remote trong `.env` |
 | `pnpm build` | Build Backend + Admin + Landing |
 | `pnpm lint` | Lint toàn monorepo |
 | `pnpm db:migrate` | Chạy Prisma migration |
@@ -175,13 +173,12 @@ Mỗi service có `.env.example` riêng — copy thành `.env` và điền giá 
 - **Python FastAPI** — OpenAI GPT-4o-mini, function calling, RAG với pgvector
 - **PostgreSQL 16 + pgvector** — Prisma migrations + vector embeddings
 - **Turborepo + pnpm** — Monorepo management (concurrently cho Chatbot)
-- **Docker Compose** — PostgreSQL & môi trường production
+- **Docker Compose** — môi trường production
 
 ## Docker
 
 ```bash
-docker compose up -d          # Chạy tất cả services (postgres, backend, admin, landing, chatbot)
-docker compose up -d postgres # Chỉ PostgreSQL
+docker compose up -d          # Chạy các services bằng Docker
 docker compose logs -f chatbot
 docker compose down
 ```

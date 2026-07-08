@@ -53,7 +53,7 @@ Tạo 3 file tại `~/VegaManagement/`:
 ```env
 NODE_ENV=production
 # Container chạy trên VPS → kết nối Postgres của host qua bridge gateway
-DATABASE_URL=postgresql://veg_user:admin123@host.docker.internal:5432/veg_shop
+DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@host.docker.internal:5432/veg_shop
 JWT_SECRET=<strong-secret>
 CUSTOMER_JWT_SECRET=<strong-secret>
 BOT_API_KEY=<api-key-bcrypt-dùng>
@@ -63,7 +63,7 @@ CLOUDINARY_URL=cloudinary://...
 ```
 
 **`chatbot/.env`**: copy từ `chatbot/.env` local, đảm bảo có `OPENAI_API_KEY`,
-`DATABASE_URL=postgresql://veg_user:admin123@host.docker.internal:5432/veg_shop`,
+`DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@host.docker.internal:5432/veg_shop`,
 `BOT_API_KEY` (trùng backend), và các biến Zalo/Messenger.
 
 **`admin/.env`**: biến runtime (nếu có); `NEXT_PUBLIC_*` không cần vì đã nhúng lúc build.
@@ -73,7 +73,7 @@ CLOUDINARY_URL=cloudinary://...
 - Firewall cho phép subnet docker (`172.16.0.0/12`) tới 5432 — **không mở 5432 ra Internet**.
 - Migration (chạy 1 lần + mỗi lần thêm migration):
   ```bash
-  DATABASE_URL=postgresql://veg_user:admin123@localhost:5432/veg_shop \
+  DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@localhost:5432/veg_shop \
     pnpm --filter backend exec prisma migrate deploy
   ```
 
