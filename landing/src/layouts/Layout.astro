@@ -57,6 +57,9 @@ const {
           { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
         );
         document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+        // Cho JS inject sau (vd: storefront.js render categories động) đăng ký lại
+        // reveal cho phần tử mới — nếu không chúng kẹt ở opacity:0 (mất khỏi viewport lúc quét).
+        window.vfReveal = function (el) { observer.observe(el); };
       })();
     </script>
   </body>

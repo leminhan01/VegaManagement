@@ -18,7 +18,7 @@ const categories = [
       <p class="section-desc text-pretty">Đa dạng thực phẩm chay cho mọi bữa ăn, từ bếp nhà đến bàn tiệc.</p>
     </header>
 
-    <div class="categories-grid">
+    <div class="categories-grid" id="vf-landing-categories">
       {categories.map((cat, i) => (
         <article
           class:list={[
@@ -48,7 +48,7 @@ const categories = [
   </div>
 </section>
 
-<style>
+<style is:global>
   .categories {
     padding-block: var(--space-section);
   }
