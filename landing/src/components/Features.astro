@@ -4,14 +4,14 @@ const featured = [
     icon: 'ph-sparkle',
     title: 'Trợ lý tư vấn cá nhân hóa',
     desc: 'Chat với trợ lý ảo để được gợi ý món phù hợp sở thích, chế độ dinh dưỡng và ngân sách của bạn, hoàn toàn miễn phí.',
-    image: 'https://picsum.photos/seed/veg-ai-advisor/900/700',
+    image: 'https://res.cloudinary.com/draoz2f7p/image/upload/v1783548436/chatbot_vegi_jjxlb2.png',
     points: ['Hiểu khẩu vị của bạn', 'Gợi ý món theo ngân sách', 'Tra cứu đơn hàng tức thì'],
   },
   {
     icon: 'ph-truck',
     title: 'Giao hàng siêu tốc',
     desc: 'Giao nội thành TP.HCM trong 2 đến 4 giờ, đóng gói cẩn thận giữ trọn độ tươi. Freeship cho đơn từ 300.000đ.',
-    image: 'https://picsum.photos/seed/veg-delivery-fast/900/700',
+    image: 'https://res.cloudinary.com/draoz2f7p/image/upload/v1783548190/shipping_ay44il.png',
     points: ['Giao 2-4h nội thành', 'Freeship đơn từ 300k', 'Đổi trả trong 7 ngày'],
   },
 ];
@@ -144,17 +144,20 @@ const more = [
     overflow: hidden;
     aspect-ratio: 4 / 3;
     box-shadow: 0 24px 48px -22px rgba(20, 83, 45, 0.3);
+    background: #f5faed;
+    transition: transform var(--duration-slow) var(--ease-out);
   }
 
   .feature-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform var(--duration-slow) var(--ease-out);
+    object-fit: contain;
+    object-position: center;
+    display: block;
   }
 
-  .feature-row:hover .feature-image {
-    transform: scale(1.04);
+  .feature-row:hover .feature-image-wrap {
+    transform: translateY(-3px);
   }
 
   .feature-icon-badge {
@@ -293,7 +296,7 @@ const more = [
     }
 
     .feature-image-wrap {
-      aspect-ratio: 16 / 10;
+      aspect-ratio: 16 / 9;
     }
 
     .more-grid {

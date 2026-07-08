@@ -192,6 +192,7 @@
       categories = json.data || [];
     } catch (e) { categories = []; }
     renderChips();
+    renderLandingCategories();
   }
 
   async function loadProducts() {
@@ -248,6 +249,79 @@
         renderChips();
         loadProducts();
       });
+    });
+  }
+
+  function fallbackCategoryImage(index) {
+    var seeds = [
+      'veg-fresh-greens',
+      'veg-dried-beans',
+      'veg-spice-pot',
+      'veg-frozen-dumpling',
+      'veg-drink-tea',
+      'veg-snack-nuts',
+      'veg-supplement',
+      'veg-ready-meal',
+    ];
+    return 'https://picsum.photos/seed/' + seeds[index % seeds.length] + '/700/700';
+  }
+
+  function categoryIcon(c) {
+    var key = String((c && (c.slug || c.name)) || '').toLowerCase();
+    if (key.indexOf('tuoi') >= 0 || key.indexOf('fresh') >= 0 || key.indexOf('rau') >= 0) return 'ph-carrot';
+    if (key.indexOf('kho') >= 0 || key.indexOf('dried') >= 0 || key.indexOf('hat') >= 0) return 'ph-plant';
+    if (key.indexOf('gia') >= 0 || key.indexOf('season') >= 0) return 'ph-cooking-pot';
+    if (key.indexOf('dong') >= 0 || key.indexOf('frozen') >= 0) return 'ph-snowflake';
+    if (key.indexOf('uong') >= 0 || key.indexOf('beverage') >= 0) return 'ph-coffee';
+    if (key.indexOf('snack') >= 0 || key.indexOf('an-vat') >= 0) return 'ph-cookie';
+    if (key.indexOf('sung') >= 0 || key.indexOf('supplement') >= 0) return 'ph-pill';
+    if (key.indexOf('san') >= 0 || key.indexOf('ready') >= 0) return 'ph-bowl-food';
+    return 'ph-leaf';
+  }
+
+  function categoryDesc(c) {
+    var key = String((c && (c.slug || c.name)) || '').toLowerCase();
+    if (key.indexOf('tuoi') >= 0 || key.indexOf('fresh') >= 0 || key.indexOf('rau') >= 0) return 'Rau củ, trái cây sạch';
+    if (key.indexOf('kho') >= 0 || key.indexOf('dried') >= 0 || key.indexOf('hat') >= 0) return 'Hạt, đậu, nấm khô';
+    if (key.indexOf('gia') >= 0 || key.indexOf('season') >= 0) return 'Nước chấm, gia vị chay';
+    if (key.indexOf('dong') >= 0 || key.indexOf('frozen') >= 0) return 'Món chay tiện lợi';
+    if (key.indexOf('uong') >= 0 || key.indexOf('beverage') >= 0) return 'Trà, nước ép, sinh tố';
+    if (key.indexOf('snack') >= 0 || key.indexOf('an-vat') >= 0) return 'Snack chay, hạt rang';
+    if (key.indexOf('sung') >= 0 || key.indexOf('supplement') >= 0) return 'Dinh dưỡng thực vật';
+    if (key.indexOf('san') >= 0 || key.indexOf('ready') >= 0) return 'Đồ hộp, món ăn nhanh';
+    return 'Khám phá sản phẩm phù hợp';
+  }
+
+  function renderLandingCategories() {
+    var grid = $('#vf-landing-categories');
+    if (!grid || !categories.length) return;
+
+    grid.innerHTML = categories.map(function (c, i) {
+      var isWide = i === 0 || (categories.length > 5 && i === categories.length - 1);
+      var image = c.image || fallbackCategoryImage(i);
+      return (
+        '<article class="category-card reveal reveal-delay-' + ((i % 4) + 1) + (isWide ? ' category-card--wide' : '') + '">' +
+          '<div class="category-image" aria-hidden="true">' +
+            '<img src="' + escapeHtml(image) + '" alt="" loading="lazy" />' +
+          '</div>' +
+          '<div class="category-overlay" aria-hidden="true"></div>' +
+          '<div class="category-content">' +
+            '<span class="category-icon" aria-hidden="true"><i class="ph ' + categoryIcon(c) + '"></i></span>' +
+            '<div class="category-meta">' +
+              '<h3 class="category-title">' + escapeHtml(c.name) + '</h3>' +
+              '<p class="category-desc">' + escapeHtml(categoryDesc(c)) + '</p>' +
+            '</div>' +
+            '<span class="category-arrow" aria-hidden="true"><i class="ph ph-arrow-up-right"></i></span>' +
+          '</div>' +
+        '</article>'
+      );
+    }).join('');
+
+    // Card vừa inject mang .reveal (opacity:0) nhưng được thêm SAU khi observer ở
+    // Layout.astro đã quét xong → đăng ký lại để hiện ra + chạy animation fade-up.
+    grid.querySelectorAll('.reveal').forEach(function (el) {
+      if (typeof window.vfReveal === 'function') window.vfReveal(el);
+      else el.classList.add('visible');
     });
   }
 
