@@ -19,6 +19,7 @@
   var categories = [];
   var activeCategory = ''; // '' = tất cả
   var searchQuery = '';
+  var productsRequestId = 0;
 
   // Phân trang sản phẩm. meta từ backend: total, page, limit, totalPages, hasNext, hasPrev.
   var pagination = { page: 1, limit: 8, total: 0, totalPages: 0 };
@@ -196,6 +197,7 @@
   }
 
   async function loadProducts() {
+    var requestId = ++productsRequestId;
     var grid = $('#vf-products');
     if (grid) grid.innerHTML = '<p class="store-empty">Đang tải sản phẩm...</p>';
     try {
@@ -207,11 +209,13 @@
       if (searchQuery) params.set('search', searchQuery);
       if (activeCategory) params.set('categoryId', activeCategory);
       var json = await api('/products?' + params.toString(), { auth: false });
+      if (requestId !== productsRequestId) return;
       products = json.data || [];
       applyMeta(json.meta);
       renderProducts();
       renderPagination();
     } catch (e) {
+      if (requestId !== productsRequestId) return;
       products = [];
       pagination.total = 0;
       pagination.totalPages = 0;
@@ -236,20 +240,36 @@
   function renderChips() {
     var wrap = $('#vf-chips');
     if (!wrap) return;
-    var html = '<button class="vf-s-chip' + (activeCategory === '' ? ' active' : '') + '" data-cat="">Tất cả</button>';
+    var html = '<button type="button" class="vf-s-chip' + (activeCategory === '' ? ' active' : '') + '" data-cat="" aria-pressed="' + (activeCategory === '' ? 'true' : 'false') + '">Tất cả</button>';
     categories.forEach(function (c) {
-      html += '<button class="vf-s-chip' + (activeCategory === c.id ? ' active' : '') + '" data-cat="' + escapeHtml(c.id) + '">' +
+      html += '<button type="button" class="vf-s-chip' + (activeCategory === c.id ? ' active' : '') + '" data-cat="' + escapeHtml(c.id) + '" aria-pressed="' + (activeCategory === c.id ? 'true' : 'false') + '">' +
         escapeHtml(c.name) + '</button>';
     });
     wrap.innerHTML = html;
     wrap.querySelectorAll('.vf-s-chip').forEach(function (chip) {
       chip.addEventListener('click', function () {
-        activeCategory = chip.getAttribute('data-cat');
-        pagination.page = 1; // đổi danh mục → về trang 1
-        renderChips();
-        loadProducts();
+        selectCategory(chip.getAttribute('data-cat'), false);
       });
     });
+  }
+
+  function selectCategory(categoryId, shouldScroll) {
+    activeCategory = categoryId || '';
+    pagination.page = 1;
+    renderChips();
+
+    document.querySelectorAll('#vf-landing-categories .category-card').forEach(function (card) {
+      var isActive = card.getAttribute('data-cat') === activeCategory;
+      card.classList.toggle('is-active', isActive);
+      card.setAttribute('aria-pressed', String(isActive));
+    });
+
+    loadProducts();
+
+    if (shouldScroll) {
+      var store = $('#store');
+      if (store) store.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function fallbackCategoryImage(index) {
@@ -300,7 +320,7 @@
       var isWide = i === 0 || (categories.length > 5 && i === categories.length - 1);
       var image = c.image || fallbackCategoryImage(i);
       return (
-        '<article class="category-card reveal reveal-delay-' + ((i % 4) + 1) + (isWide ? ' category-card--wide' : '') + '">' +
+        '<article class="category-card reveal reveal-delay-' + ((i % 4) + 1) + (isWide ? ' category-card--wide' : '') + '" data-cat="' + escapeHtml(c.id) + '" role="button" tabindex="0" aria-controls="vf-products" aria-pressed="false" aria-label="Xem sản phẩm ' + escapeHtml(c.name) + '">' +
           '<div class="category-image" aria-hidden="true">' +
             '<img src="' + escapeHtml(image) + '" alt="" loading="lazy" />' +
           '</div>' +
@@ -316,6 +336,17 @@
         '</article>'
       );
     }).join('');
+
+    grid.querySelectorAll('.category-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        selectCategory(card.getAttribute('data-cat'), true);
+      });
+      card.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        selectCategory(card.getAttribute('data-cat'), true);
+      });
+    });
 
     // Card vừa inject mang .reveal (opacity:0) nhưng được thêm SAU khi observer ở
     // Layout.astro đã quét xong → đăng ký lại để hiện ra + chạy animation fade-up.
