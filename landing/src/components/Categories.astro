@@ -89,6 +89,10 @@ const categories = [
     aspect-ratio: 1;
     cursor: pointer;
     background: var(--color-deep);
+    border: 0;
+    width: 100%;
+    font: inherit;
+    text-align: left;
     transition:
       transform var(--duration-normal) var(--ease-out),
       box-shadow var(--duration-normal) var(--ease-out);
@@ -101,6 +105,15 @@ const categories = [
 
   .category-card:active {
     transform: scale(0.98) translateY(0);
+  }
+
+  .category-card:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 4px;
+  }
+
+  .category-card.is-active {
+    box-shadow: 0 0 0 3px var(--color-primary), 0 22px 44px -18px rgba(20, 83, 45, 0.4);
   }
 
   .category-card--wide {

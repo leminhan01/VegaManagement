@@ -4,6 +4,7 @@
 .store-section {
   padding: var(--space-section) 0;
   background: var(--color-bg-warm);
+  scroll-margin-top: 68px;
 }
 
 .store-head {

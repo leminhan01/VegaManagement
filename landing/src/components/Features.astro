@@ -24,19 +24,34 @@ const featured = [
 
 const promises = [
   {
-    icon: 'ph-seal-check',
-    title: 'Biết rõ mình đang mua gì',
-    desc: 'Thành phần, nguồn gốc và thông tin dị ứng được trình bày rõ trên từng sản phẩm.',
+    icon: 'ph-shield-check',
+    title: 'Thực phẩm an toàn',
+    desc: 'Sản phẩm được chọn lọc kỹ, bảo quản đúng cách và kiểm tra hạn dùng trước khi giao.',
   },
   {
-    icon: 'ph-tag',
-    title: 'Giá tốt, lựa chọn vừa túi',
-    desc: 'Dễ so sánh giá, xem ưu đãi và chọn sản phẩm phù hợp với ngân sách mỗi ngày.',
+    icon: 'ph-coins',
+    title: 'Giá hợp lý mỗi ngày',
+    desc: 'Giá bán và ưu đãi hiển thị rõ ràng để bạn dễ chọn món ngon vừa với ngân sách.',
+  },
+  {
+    icon: 'ph-seal-check',
+    title: 'Nguồn gốc minh bạch',
+    desc: 'Thành phần, nơi sản xuất và thông tin dị ứng được trình bày rõ trên từng sản phẩm.',
+  },
+  {
+    icon: 'ph-truck',
+    title: 'Giao hàng giữ độ tươi',
+    desc: 'Đơn được đóng gói phù hợp với từng nhóm thực phẩm và giao nhanh trong nội thành.',
   },
   {
     icon: 'ph-chats-circle',
-    title: 'Có người tư vấn khi cần',
-    desc: 'Nhắn VegiFlow để tìm món theo khẩu vị, chế độ ăn hoặc ngân sách của bạn.',
+    title: 'Tư vấn đúng nhu cầu',
+    desc: 'Nhắn VegiFlow để tìm món theo khẩu vị, chế độ ăn, dị ứng hoặc ngân sách của bạn.',
+  },
+  {
+    icon: 'ph-arrows-counter-clockwise',
+    title: 'Đổi trả rõ ràng',
+    desc: 'VegiFlow hỗ trợ nhanh khi sản phẩm giao sai, hư hỏng hoặc không đạt chất lượng.',
   },
 ];
 ---
@@ -351,6 +366,11 @@ const promises = [
     gap: var(--space-md);
     padding: var(--space-sm) var(--space-lg);
     border-left: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .promise-item:nth-child(n + 4) {
+    padding-top: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
   }
 
   .promise-icon {

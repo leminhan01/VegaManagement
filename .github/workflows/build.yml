@@ -124,7 +124,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main
+      - dev
   workflow_dispatch:
 
 permissions:
@@ -157,7 +157,7 @@ jobs:
           - service: landing
             build_args: |
               PUBLIC_CHATBOT_API_URL=${{ vars.PUBLIC_CHATBOT_API_URL || 'https://bot.lmnhan.io.vn' }}
-              PUBLIC_STOREFRONT_API_URL=${{ vars.PUBLIC_STOREFRONT_API_URL || 'https://api.lmnhan.io.vn/api' }}
+              PUBLIC_STOREFRONT_API_URL=${{ vars.PUBLIC_STOREFRONT_API_URL || 'https://api.lmnhan.io.vn/api/storefront' }}
 
     steps:
 
@@ -263,7 +263,7 @@ jobs:
 
             docker compose -f docker-compose.prod.yml ps
 
-            BACKEND_ID=$(docker compose ps -q backend)
+            BACKEND_ID=$(docker compose -f docker-compose.prod.yml ps -q backend)
 
             if [ -n "$BACKEND_ID" ]; then
               STATUS=$(docker inspect \
@@ -273,12 +273,12 @@ jobs:
               echo "Backend health: $STATUS"
 
               if [ "$STATUS" = "unhealthy" ]; then
-                docker compose logs backend
+                docker compose -f docker-compose.prod.yml logs backend
                 exit 1
               fi
             fi
 
-            CHATBOT_ID=$(docker compose ps -q chatbot)
+            CHATBOT_ID=$(docker compose -f docker-compose.prod.yml ps -q chatbot)
 
             if [ -n "$CHATBOT_ID" ]; then
               STATUS=$(docker inspect \
@@ -288,10 +288,24 @@ jobs:
               echo "Chatbot health: $STATUS"
 
               if [ "$STATUS" = "unhealthy" ]; then
-                docker compose logs chatbot
+                docker compose -f docker-compose.prod.yml logs chatbot
                 exit 1
               fi
             fi
+
+            echo "Checking production CORS preflight..."
+            CORS_HEADERS=$(curl --fail --silent --show-error --dump-header - --output /dev/null \
+              --request OPTIONS 'https://api.lmnhan.io.vn/api/auth/login' \
+              --header 'Origin: https://admin.lmnhan.io.vn' \
+              --header 'Access-Control-Request-Method: POST' \
+              --header 'Access-Control-Request-Headers: content-type')
+
+            echo "$CORS_HEADERS"
+            echo "$CORS_HEADERS" | tr -d '\r' | grep -Fqix 'access-control-allow-origin: https://admin.lmnhan.io.vn' || {
+              echo "CORS preflight does not allow https://admin.lmnhan.io.vn"
+              docker compose -f docker-compose.prod.yml logs backend
+              exit 1
+            }
 
             docker image prune -af
 

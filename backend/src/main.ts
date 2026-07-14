@@ -8,14 +8,18 @@ async function bootstrap() {
 
   // Chỉ cho phép các browser app đã biết gọi API. Bỏ dấu / cuối để tránh
   // cấu hình production vô tình không khớp với header Origin của trình duyệt.
+  const requiredCorsOrigins = [
+    'https://admin.lmnhan.io.vn',
+    'https://lmnshop.lmnhan.io.vn',
+  ];
+  const configuredCorsOrigins = (
+    process.env.CORS_ORIGINS ??
+    'http://localhost:4000,http://localhost:3001'
+  ).split(',');
   const corsOrigins = new Set(
-    (
-      process.env.CORS_ORIGINS ??
-      'https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn,http://localhost:4000,http://localhost:3001'
-    )
-    .split(',')
-    .map((origin) => origin.trim().replace(/\/$/, ''))
-    .filter(Boolean),
+    [...requiredCorsOrigins, ...configuredCorsOrigins]
+      .map((origin) => origin.trim().replace(/\/$/, ''))
+      .filter(Boolean),
   );
 
   app.enableCors({
