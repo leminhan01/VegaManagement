@@ -1,25 +1,50 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS cho Admin Panel, Chatbot Service và Landing (storefront).
-  // Override qua env CORS_ORIGINS (comma-separated) nếu đổi domain.
-  const corsOrigins = (
-    process.env.CORS_ORIGINS ??
-    'https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn,http://localhost:4000,http://localhost:8000,http://localhost:3001'
-  )
+  // Chỉ cho phép các browser app đã biết gọi API. Bỏ dấu / cuối để tránh
+  // cấu hình production vô tình không khớp với header Origin của trình duyệt.
+  const corsOrigins = new Set(
+    (
+      process.env.CORS_ORIGINS ??
+      'https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn,http://localhost:4000,http://localhost:3001'
+    )
     .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter(Boolean),
+  );
 
   app.enableCors({
-    origin: corsOrigins,
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      // Request server-to-server không có Origin và không thuộc CORS.
+      const normalizedOrigin = origin?.replace(/\/$/, '');
+      const isAllowed = !normalizedOrigin || corsOrigins.has(normalizedOrigin);
+
+      if (!isAllowed) {
+        Logger.warn(`Blocked CORS origin: ${normalizedOrigin}`, 'Bootstrap');
+      }
+
+      callback(null, isAllowed);
+    },
     credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Accept', 'Authorization', 'Content-Type', 'X-API-Key'],
+    exposedHeaders: ['Content-Disposition'],
+    maxAge: 86400,
+    optionsSuccessStatus: 204,
   });
+
+  Logger.log(
+    `CORS origins: ${Array.from(corsOrigins).join(', ')}`,
+    'Bootstrap',
+  );
 
   // Global prefix cho tất cả routes
   app.setGlobalPrefix('api');

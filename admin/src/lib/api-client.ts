@@ -11,9 +11,13 @@ class ApiClient {
   private async fetch<T>(endpoint: string, options?: RequestInit): Promise<T | null> {
     const token = this.getToken();
     const headers: Record<string, string> = {
-      "Content-Type": "application/json",
       ...((options?.headers as Record<string, string>) ?? {}),
     };
+    // GET/DELETE không có body không cần Content-Type. Tránh tạo preflight CORS
+    // không cần thiết cho các request chỉ đọc dữ liệu.
+    if (options?.body !== undefined && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
     const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });

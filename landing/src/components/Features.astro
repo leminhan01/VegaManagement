@@ -1,36 +1,42 @@
 ---
 const featured = [
   {
-    icon: 'ph-sparkle',
-    title: 'Trợ lý tư vấn cá nhân hóa',
-    desc: 'Chat với trợ lý ảo để được gợi ý món phù hợp sở thích, chế độ dinh dưỡng và ngân sách của bạn, hoàn toàn miễn phí.',
+    icon: 'ph-leaf',
+    label: 'Đa dạng lựa chọn',
+    title: 'Đủ món chay ngon cho mọi bữa ăn',
+    desc: 'Từ rau củ tươi, hạt và gia vị đến món ăn sẵn, VegiFlow giúp bạn dễ dàng chọn đủ nguyên liệu cho một bữa chay trọn vị.',
     image: 'https://res.cloudinary.com/draoz2f7p/image/upload/v1783548436/chatbot_vegi_jjxlb2.png',
-    points: ['Hiểu khẩu vị của bạn', 'Gợi ý món theo ngân sách', 'Tra cứu đơn hàng tức thì'],
+    imageAlt: 'Các sản phẩm thực phẩm chay của VegiFlow',
+    points: ['Hơn 100 sản phẩm thuần thực vật', 'Danh mục rõ ràng, dễ tìm món', 'Nhiều lựa chọn cho từng ngân sách'],
+    cta: 'Khám phá sản phẩm',
   },
   {
-    icon: 'ph-truck',
-    title: 'Giao hàng siêu tốc',
-    desc: 'Giao nội thành TP.HCM trong 2 đến 4 giờ, đóng gói cẩn thận giữ trọn độ tươi. Freeship cho đơn từ 300.000đ.',
+    icon: 'ph-shopping-bag-open',
+    label: 'Mua sắm tiện lợi',
+    title: 'Chọn nhanh, đặt gọn, nhận hàng tươi',
+    desc: 'Xem giá và tồn kho rõ ràng, nhận tư vấn đúng nhu cầu rồi đặt hàng chỉ trong vài bước. Đơn được đóng gói cẩn thận và giao tận nơi.',
     image: 'https://res.cloudinary.com/draoz2f7p/image/upload/v1783548190/shipping_ay44il.png',
-    points: ['Giao 2-4h nội thành', 'Freeship đơn từ 300k', 'Đổi trả trong 7 ngày'],
+    imageAlt: 'Đơn hàng VegiFlow được đóng gói và giao tận nơi',
+    points: ['Giao nội thành trong 2 đến 4 giờ', 'Freeship cho đơn từ 300.000đ', 'Đổi trả thuận tiện trong 7 ngày'],
+    cta: 'Mua ngay hôm nay',
   },
 ];
 
-const more = [
-  {
-    icon: 'ph-chats',
-    title: 'Chat mọi nền tảng',
-    desc: 'Nhắn tin qua Zalo, Facebook Messenger hoặc web, bất cứ lúc nào.',
-  },
+const promises = [
   {
     icon: 'ph-seal-check',
-    title: 'Nguồn gốc rõ ràng',
-    desc: 'Mỗi sản phẩm đều ghi rõ thành phần, chứng nhận VietGAP và Organic.',
+    title: 'Biết rõ mình đang mua gì',
+    desc: 'Thành phần, nguồn gốc và thông tin dị ứng được trình bày rõ trên từng sản phẩm.',
   },
   {
-    icon: 'ph-arrow-counter-clockwise',
-    title: 'Đổi trả 7 ngày',
-    desc: 'Không vừa ý? Đổi trả trong 7 ngày, hoàn tiền nhanh chóng.',
+    icon: 'ph-tag',
+    title: 'Giá tốt, lựa chọn vừa túi',
+    desc: 'Dễ so sánh giá, xem ưu đãi và chọn sản phẩm phù hợp với ngân sách mỗi ngày.',
+  },
+  {
+    icon: 'ph-chats-circle',
+    title: 'Có người tư vấn khi cần',
+    desc: 'Nhắn VegiFlow để tìm món theo khẩu vị, chế độ ăn hoặc ngân sách của bạn.',
   },
 ];
 ---
@@ -38,13 +44,17 @@ const more = [
 <section class="features" id="features" aria-labelledby="features-title">
   <div class="container">
     <header class="section-header reveal">
-      <h2 id="features-title" class="section-title text-balance">Vì sao chọn VegiFlow</h2>
+      <div class="section-heading">
+        <span class="section-kicker">Mua đồ chay dễ dàng hơn</span>
+        <h2 id="features-title" class="section-title text-balance">
+          Vì sao chọn <span>VegiFlow?</span>
+        </h2>
+      </div>
       <p class="section-desc text-pretty">
-        Thực phẩm chay chất lượng cao, kết hợp dịch vụ tận tâm để mỗi bữa ăn của bạn thêm nhẹ nhàng.
+        Sản phẩm chay đa dạng, thông tin minh bạch và trải nghiệm mua hàng thuận tiện cho bữa ăn ngon mỗi ngày.
       </p>
     </header>
 
-    <!-- Featured zig-zag rows -->
     <div class="featured-list">
       {featured.map((feat, i) => (
         <article
@@ -54,7 +64,7 @@ const more = [
             <div class="feature-image-wrap">
               <img
                 src={feat.image}
-                alt=""
+                alt={feat.imageAlt}
                 loading="lazy"
                 class="feature-image"
               />
@@ -64,30 +74,42 @@ const more = [
             </div>
           </div>
           <div class="feature-text-col">
-            <h3 class="feature-title">{feat.title}</h3>
+            <span class="feature-label">{feat.label}</span>
+            <h3 class="feature-title text-balance">{feat.title}</h3>
             <p class="feature-desc text-pretty">{feat.desc}</p>
             <ul class="feature-points" role="list">
-              {feat.points.map((p) => (
+              {feat.points.map((point) => (
                 <li>
-                  <i class="ph ph-seal-check" aria-hidden="true"></i>
-                  <span>{p}</span>
+                  <i class="ph ph-check-circle" aria-hidden="true"></i>
+                  <span>{point}</span>
                 </li>
               ))}
             </ul>
+            <a class="feature-cta" href="#store">
+              <span>{feat.cta}</span>
+              <i class="ph ph-arrow-right" aria-hidden="true"></i>
+            </a>
           </div>
         </article>
       ))}
     </div>
 
-    <!-- Secondary compact grid -->
-    <div class="more-grid">
-      {more.map((m, i) => (
-        <article class:list={['more-card', 'reveal', `reveal-delay-${(i % 3) + 1}`]}>
-          <span class="more-icon" aria-hidden="true"><i class={`ph ${m.icon}`}></i></span>
-          <h3 class="more-title">{m.title}</h3>
-          <p class="more-desc text-pretty">{m.desc}</p>
-        </article>
-      ))}
+    <div class="promise-panel reveal" aria-label="Cam kết mua hàng từ VegiFlow">
+      <div class="promise-intro">
+        <span class="promise-mark" aria-hidden="true"><i class="ph ph-plant"></i></span>
+        <p class="text-balance">Chọn món chay bằng sự an tâm, không bằng phỏng đoán.</p>
+      </div>
+      <div class="promise-list">
+        {promises.map((promise, i) => (
+          <article class:list={['promise-item', `reveal-delay-${i + 1}`]}>
+            <span class="promise-icon" aria-hidden="true"><i class={`ph ${promise.icon}`}></i></span>
+            <div>
+              <h3>{promise.title}</h3>
+              <p class="text-pretty">{promise.desc}</p>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   </div>
 </section>
@@ -99,53 +121,82 @@ const more = [
   }
 
   .section-header {
-    text-align: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+    align-items: end;
+    gap: var(--space-2xl);
     margin-bottom: var(--space-4xl);
   }
 
-  .section-title {
-    font-family: var(--font-display);
-    font-size: var(--text-h2);
+  .section-kicker,
+  .feature-label {
+    display: block;
+    color: var(--color-primary-hover);
+    font-size: var(--text-small);
     font-weight: 700;
-    letter-spacing: var(--ls-tight);
-    color: var(--color-deep);
+    letter-spacing: var(--ls-wide);
     margin-bottom: var(--space-sm);
   }
 
-  .section-desc {
-    font-size: var(--text-body);
-    color: var(--color-text-secondary);
-    max-width: 520px;
-    margin-inline: auto;
+  .section-title {
+    max-width: 720px;
+    font-family: var(--font-display);
+    font-size: var(--text-h2);
+    font-weight: 700;
+    line-height: var(--lh-heading);
+    letter-spacing: var(--ls-tight);
+    color: var(--color-deep);
   }
 
-  /* ── Featured rows ──────────────────────── */
+  .section-title span {
+    color: var(--color-primary);
+  }
+
+  .section-desc {
+    max-width: 500px;
+    color: var(--color-text-secondary);
+    font-size: var(--text-body);
+  }
+
   .featured-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-5xl);
-    margin-bottom: var(--space-5xl);
+    margin-bottom: var(--space-4xl);
   }
 
   .feature-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3xl);
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: clamp(2rem, 6vw, 5.5rem);
     align-items: center;
+  }
+
+  .feature-row--reverse {
+    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
   }
 
   .feature-row--reverse .feature-image-col {
     order: 2;
   }
 
+  .feature-row--reverse .feature-text-col {
+    margin-left: auto;
+  }
+
   .feature-image-wrap {
     position: relative;
-    border-radius: var(--radius-xl);
     overflow: hidden;
     aspect-ratio: 4 / 3;
-    box-shadow: 0 24px 48px -22px rgba(20, 83, 45, 0.3);
-    background: #f5faed;
+    border: 1px solid rgba(34, 166, 90, 0.12);
+    border-radius: var(--radius-xl);
+    background: #eef7e8;
+    box-shadow: 0 28px 58px -30px rgba(20, 83, 45, 0.36);
     transition: transform var(--duration-slow) var(--ease-out);
+  }
+
+  .feature-row:hover .feature-image-wrap {
+    transform: translateY(-4px);
   }
 
   .feature-image {
@@ -153,132 +204,212 @@ const more = [
     height: 100%;
     object-fit: contain;
     object-position: center;
-    display: block;
-  }
-
-  .feature-row:hover .feature-image-wrap {
-    transform: translateY(-3px);
   }
 
   .feature-icon-badge {
     position: absolute;
-    bottom: var(--space-lg);
     left: var(--space-lg);
+    bottom: var(--space-lg);
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 56px;
     height: 56px;
-    font-size: 1.6rem;
-    color: #fff;
-    background: rgba(34, 166, 90, 0.92);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.42);
     border-radius: 16px;
-    box-shadow: 0 10px 24px -8px rgba(20, 83, 45, 0.4);
+    background: rgba(34, 166, 90, 0.94);
+    box-shadow: 0 12px 28px -10px rgba(20, 83, 45, 0.45);
+    color: #fff;
+    font-size: 1.55rem;
+    backdrop-filter: blur(8px);
   }
 
   .feature-text-col {
-    max-width: 460px;
-  }
-
-  .feature-row--reverse .feature-text-col {
-    margin-left: auto;
+    max-width: 480px;
   }
 
   .feature-title {
-    font-family: var(--font-display);
-    font-size: var(--text-h3);
-    font-weight: 700;
-    color: var(--color-deep);
     margin-bottom: var(--space-md);
+    color: var(--color-deep);
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 3vw, 2.45rem);
+    font-weight: 700;
+    line-height: 1.18;
     letter-spacing: var(--ls-tight);
   }
 
   .feature-desc {
-    font-size: var(--text-body);
-    line-height: var(--lh-relaxed);
-    color: var(--color-text-secondary);
     margin-bottom: var(--space-lg);
+    color: var(--color-text-secondary);
+    font-size: var(--text-body);
+    line-height: var(--lh-body);
   }
 
   .feature-points {
-    list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    gap: 0.7rem;
+    margin-bottom: var(--space-xl);
+    list-style: none;
   }
 
   .feature-points li {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    font-size: var(--text-small);
-    font-weight: 500;
     color: var(--color-text);
+    font-size: var(--text-small);
+    font-weight: 550;
   }
 
   .feature-points i {
-    font-size: 1.1rem;
+    flex: 0 0 auto;
     color: var(--color-primary);
+    font-size: 1.15rem;
   }
 
-  /* ── Secondary grid ─────────────────────── */
-  .more-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-lg);
-  }
-
-  .more-card {
-    padding: var(--space-xl);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    transition:
-      transform var(--duration-normal) var(--ease-out),
-      box-shadow var(--duration-normal) var(--ease-out),
-      border-color var(--duration-normal) ease;
-  }
-
-  .more-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 18px 38px -22px rgba(20, 83, 45, 0.28);
-    border-color: var(--color-primary-light);
-  }
-
-  .more-icon {
+  .feature-cta {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    font-size: 1.4rem;
-    color: var(--color-primary);
-    background: var(--color-primary-muted);
-    border-radius: 13px;
-    margin-bottom: var(--space-md);
+    gap: 0.7rem;
+    min-height: 46px;
+    padding: 0.7rem 1.1rem;
+    border-radius: var(--radius-md);
+    background: var(--color-deep);
+    color: #fff;
+    font-size: var(--text-small);
+    font-weight: 650;
+    white-space: nowrap;
+    transition:
+      background var(--duration-fast) ease,
+      transform var(--duration-fast) ease;
   }
 
-  .more-title {
-    font-family: var(--font-display);
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--color-deep);
-    margin-bottom: var(--space-xs);
+  .feature-cta:hover {
+    background: var(--color-deep-hover);
+    color: #fff;
+  }
+
+  .feature-cta:active {
+    transform: translateY(1px);
+  }
+
+  .feature-cta i {
+    transition: transform var(--duration-fast) ease;
+  }
+
+  .feature-cta:hover i {
+    transform: translateX(3px);
+  }
+
+  .promise-panel {
+    display: grid;
+    grid-template-columns: minmax(230px, 0.7fr) minmax(0, 1.7fr);
+    gap: var(--space-2xl);
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border-radius: var(--radius-xl);
+    background: var(--color-deep);
+    color: #fff;
+    box-shadow: 0 24px 56px -30px rgba(20, 83, 45, 0.55);
+  }
+
+  .promise-intro {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-xl);
+  }
+
+  .promise-mark {
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #86efac;
+    font-size: 1.4rem;
+  }
+
+  .promise-intro p {
+    max-width: 280px;
+    font-size: clamp(1.25rem, 2vw, 1.65rem);
+    font-weight: 650;
+    line-height: 1.25;
     letter-spacing: var(--ls-tight);
   }
 
-  .more-desc {
-    font-size: var(--text-small);
-    line-height: var(--lh-body);
-    color: var(--color-text-secondary);
+  .promise-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  /* ── Responsive ──────────────────────────── */
-  @media (max-width: 768px) {
-    .feature-row {
+  .promise-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-lg);
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .promise-icon {
+    color: #86efac;
+    font-size: 1.25rem;
+  }
+
+  .promise-item h3 {
+    margin-bottom: var(--space-xs);
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.3;
+  }
+
+  .promise-item p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--text-small);
+    line-height: 1.55;
+  }
+
+  @media (max-width: 900px) {
+    .section-header {
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+
+    .feature-row,
+    .feature-row--reverse {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2xl);
+    }
+
+    .promise-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .promise-intro {
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .promise-item:first-child {
+      border-left: none;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .section-header {
+      margin-bottom: var(--space-2xl);
+    }
+
+    .featured-list {
+      gap: var(--space-4xl);
+      margin-bottom: var(--space-3xl);
+    }
+
+    .feature-row,
+    .feature-row--reverse {
       grid-template-columns: 1fr;
       gap: var(--space-xl);
     }
@@ -287,20 +418,27 @@ const more = [
       order: 0;
     }
 
-    .feature-text-col {
-      max-width: none;
-    }
-
     .feature-row--reverse .feature-text-col {
       margin-left: 0;
     }
 
     .feature-image-wrap {
-      aspect-ratio: 16 / 9;
+      aspect-ratio: 16 / 10;
     }
 
-    .more-grid {
+    .promise-intro {
+      align-items: flex-start;
+    }
+
+    .promise-list {
       grid-template-columns: 1fr;
+    }
+
+    .promise-item,
+    .promise-item:first-child {
+      padding: var(--space-lg) 0;
+      border-left: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
     }
   }
 </style>

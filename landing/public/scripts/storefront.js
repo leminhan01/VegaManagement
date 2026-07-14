@@ -69,7 +69,11 @@
   // ── API helper ─────────────────────────────────
   async function api(path, opts) {
     opts = opts || {};
-    var headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+    var headers = Object.assign({}, opts.headers || {});
+    // GET công khai không có body là simple request, không cần preflight CORS.
+    if (opts.body !== undefined && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
     var shouldAttachAuth = opts.auth !== false;
     if (shouldAttachAuth && auth.token) headers['Authorization'] = 'Bearer ' + auth.token;
 

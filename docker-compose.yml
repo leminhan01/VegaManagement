@@ -11,6 +11,7 @@ services:
       - NODE_ENV=production
       # Containers reach each other by service name on the "vegiflow" network (not localhost)
       - CHATBOT_SERVICE_URL=http://chatbot:8000
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn,http://localhost:4000,http://localhost:3001}
     ports:
       - "3000:3000"
     volumes:

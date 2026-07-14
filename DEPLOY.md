@@ -105,6 +105,7 @@ Vào repo **Settings → Secrets and variables → Actions**.
 | `NEXT_PUBLIC_API_URL` | `https://api.lmnhan.io.vn/api` |
 | `PUBLIC_CHATBOT_API_URL` | `https://bot.lmnhan.io.vn` |
 | `PUBLIC_STOREFRONT_API_URL` | `https://api.lmnhan.io.vn/api` |
+| `CORS_ORIGINS` | `https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn` |
 
 Chỉ set nếu đổi subdomain.
 
@@ -148,6 +149,17 @@ tạo **Proxy Host** cho mỗi subdomain:
 
 > Forward Hostname = **tên container** (chỉ hoạt động nếu cả NPM và app cùng
 > network `proxy`). Bật "Block Common Exploits" + "Websockets Support".
+
+Không thêm `Access-Control-Allow-*` thủ công trong Nginx Proxy Manager. NestJS
+đã xử lý preflight `OPTIONS`; thêm header ở cả hai lớp dễ tạo header trùng hoặc
+response không nhất quán. Sau deploy có thể kiểm tra bằng:
+
+```bash
+curl -i -X OPTIONS 'https://api.lmnhan.io.vn/api/storefront/products' \
+  -H 'Origin: https://lmnshop.lmnhan.io.vn' \
+  -H 'Access-Control-Request-Method: GET' \
+  -H 'Access-Control-Request-Headers: content-type'
+```
 
 ### DNS record (ở nơi quản lý `lmnhan.io.vn`)
 Trỏ 4 record (A hoặc CNAME) về `180.93.54.119`:
