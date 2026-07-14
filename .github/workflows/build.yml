@@ -152,12 +152,12 @@ jobs:
         include:
           - service: admin
             build_args: |
-              NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://vegiflow-api.lmnhan.io.vn/api' }}
+              NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://api.lmnhan.io.vn/api' }}
 
           - service: landing
             build_args: |
               PUBLIC_CHATBOT_API_URL=${{ vars.PUBLIC_CHATBOT_API_URL || 'https://bot.lmnhan.io.vn' }}
-              PUBLIC_STOREFRONT_API_URL=${{ vars.PUBLIC_STOREFRONT_API_URL || 'https://vegiflow-api.lmnhan.io.vn/api' }}
+              PUBLIC_STOREFRONT_API_URL=${{ vars.PUBLIC_STOREFRONT_API_URL || 'https://api.lmnhan.io.vn/api/storefront' }}
 
     steps:
 
@@ -295,7 +295,7 @@ jobs:
 
             echo "Checking production CORS preflight..."
             CORS_HEADERS=$(curl --fail --silent --show-error --dump-header - --output /dev/null \
-              --request OPTIONS 'https://vegiflow-api.lmnhan.io.vn/api/auth/login' \
+              --request OPTIONS 'https://api.lmnhan.io.vn/api/auth/login' \
               --header 'Origin: https://admin.lmnhan.io.vn' \
               --header 'Access-Control-Request-Method: POST' \
               --header 'Access-Control-Request-Headers: content-type')
