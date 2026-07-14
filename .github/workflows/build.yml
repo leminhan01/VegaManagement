@@ -301,7 +301,7 @@ jobs:
               --header 'Access-Control-Request-Headers: content-type')
 
             echo "$CORS_HEADERS"
-            echo "$CORS_HEADERS" | grep -qi '^access-control-allow-origin: https://admin\.lmnhan\.io\.vn\r\?$' || {
+            echo "$CORS_HEADERS" | tr -d '\r' | grep -Fqix 'access-control-allow-origin: https://admin.lmnhan.io.vn' || {
               echo "CORS preflight does not allow https://admin.lmnhan.io.vn"
               docker compose -f docker-compose.prod.yml logs backend
               exit 1
