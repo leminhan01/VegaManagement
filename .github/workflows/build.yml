@@ -250,6 +250,7 @@ jobs:
             cat > .env <<EOF
             IMAGE_REGISTRY=${{ vars.IMAGE_REGISTRY }}
             IMAGE_TAG=$SHORT_SHA
+            CORS_ORIGINS=${{ vars.CORS_ORIGINS || 'https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn' }}
             EOF
 
             docker compose -f docker-compose.prod.yml pull

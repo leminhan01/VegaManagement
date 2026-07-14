@@ -18,6 +18,8 @@ services:
       - NODE_ENV=production
       # Container gọi nhau qua service name (cùng network `internal`)
       - CHATBOT_SERVICE_URL=http://chatbot:8000
+      # Allowlist browser origins. Có thể override bằng CORS_ORIGINS trong root .env.
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://admin.lmnhan.io.vn,https://lmnshop.lmnhan.io.vn}
     volumes:
       - ./backend/uploads:/app/uploads
     restart: unless-stopped
